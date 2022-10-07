@@ -42,7 +42,7 @@
  UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint16_t counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,6 +101,7 @@ int main(void)
 
 	  // Main task Dummy
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	  counter++;
 	  HAL_Delay(100);
 
   }
