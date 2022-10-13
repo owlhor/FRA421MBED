@@ -19,6 +19,7 @@ void W2812B_Init(SPI_HandleTypeDef *hspi);
 
 void W2812B_UpdateData(W2812BStructure *input);
 void HToRGB(int h,W2812BStructure *input);
-
+void W28_Cf_R_G_B(int rr, int gg, int bb,W2812BStructure *input);
+void HexToRGB_cat(uint32_t hx,W2812BStructure *input);
 
 #endif /* INC_W2812B_H_ */

@@ -186,6 +186,7 @@ void W2812B_UpdateData(W2812BStructure *input)
 		byteToW2812BEncode1(input[i].B,&LEDBuffer[20+i*9+6]);
 	}
 }
+
 void HToRGB(int h,W2812BStructure *input)
 {
 	uint8_t mode= h/256;
@@ -223,8 +224,21 @@ void HToRGB(int h,W2812BStructure *input)
 		input->G = 0;
 		input->R = 255;
 		break;
-
-
 	}
 }
 
+void W28_Cf_R_G_B(int rr, int gg, int bb,W2812BStructure *input)
+{
+		input->B = bb % 256;
+		input->G = gg % 256;
+		input->R = rr % 256;
+}
+
+void HexToRGB_cat(uint32_t hx,W2812BStructure *input){
+	/*Get input as [ 0xrrggbb ] 24-bit(uint32 form) Hex code
+	 * #RRGGBB => xx -> each color val[0,256]
+	 * */
+	input->B = hx & 0xFF;
+	input->G = (hx >> 8) & 0xFF;
+	input->R = (hx >> 16) & 0xFF;
+}

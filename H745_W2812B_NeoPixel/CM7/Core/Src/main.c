@@ -36,6 +36,8 @@
 #ifndef HSEM_ID_0
 #define HSEM_ID_0 (0U) /* HW semaphore 0*/
 #endif
+
+#define NUM_LEDPixel 8
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,7 +75,11 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-W2812BStructure LED[8]={0};
+
+W2812BStructure LED[NUM_LEDPixel]={0};
+uint16_t colorVal[NUM_LEDPixel] = {0};
+uint16_t RGBVal[NUM_LEDPixel][3] = {0};
+uint8_t counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -85,7 +91,9 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
-
+void RainbowGen_NeoPixel();
+void HtoRGB_myrend();
+void Hex2RGBB_myrend();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -169,20 +177,24 @@ Error_Handler();
   {
 	  //// H7 2 core init test
 
-	  static int h =0;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  HAL_Delay(1);
-	  		for (int i = 0; i < 8; i++) {
+	  HAL_Delay(10);
 
-	  			HToRGB((h + 192*i) % 1536, &LED[i]);
-	  		}
 
-	  		h++;
-	  		h%=1536;
+		if(counter==0){
+			Hex2RGBB_myrend();
+
+		}else if(counter==1){
+			RainbowGen_NeoPixel();
+		}
+		else{
+			HtoRGB_myrend();
+		}
 	  W2812B_UpdateData(LED);
+
 	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
   }
   /* USER CODE END 3 */
@@ -471,6 +483,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LD3_Pin */
   GPIO_InitStruct.Pin = LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -485,10 +503,96 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
+void RainbowGen_NeoPixel(){
+	if(counter==1){
+	static int h =0;
+
+	for (int i = 0; i < NUM_LEDPixel; i++) {
+
+		  			HToRGB((h + 192*i) % 1536, &LED[i]);
+		  		}
+
+		  		h++;
+		  		h%=1536;
+		}
+}
+
+void HtoRGB_myrend(){
+
+	////// Insert R G B into [LED] Directly is enable and more OK
+	//// Sample of inserting config
+	LED[0].R = 0;
+	LED[0].G = 0;
+	LED[0].B = 0;
+
+	LED[1].R = 10;
+	LED[1].G = 0;
+	LED[1].B = 0;
+
+	LED[2].R = 0;
+	LED[2].G = 10;
+	LED[2].B = 0;
+
+	LED[3].R = 0;
+	LED[3].G = 0;
+	LED[3].B = 10;
+
+	LED[4].R = 0;
+	LED[4].G = 10;
+	LED[4].B = 10;
+
+	LED[5].R = 10;
+	LED[5].G = 0;
+	LED[5].B = 10;
+
+	LED[6].R = 10;
+	LED[6].G = 10;
+	LED[6].B = 0;
+
+	LED[7].R = 10;
+	LED[7].G = 10;
+	LED[7].B = 10;
+}
+
+void Hex2RGBB_myrend(){
+	////// use 55 to not too bright -> it distrub my eyes Arghhh
+	HexToRGB_cat(0x000000, &LED[0]); // Black (no light)
+	HexToRGB_cat(0x550000, &LED[1]); // RED
+	HexToRGB_cat(0x005500, &LED[2]); // Green
+	HexToRGB_cat(0x000055, &LED[3]); // Blue
+	HexToRGB_cat(0x005555, &LED[4]); // Cyan blue
+	HexToRGB_cat(0x550055, &LED[5]); // Magenta pink
+	HexToRGB_cat(0x555500, &LED[6]); // Yellow
+	HexToRGB_cat(0x555555, &LED[7]); // K White
+}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+
+	//=========// work Blue button //=========//
+	if(GPIO_Pin == GPIO_PIN_13){
+//
+//		if(counter==0){
+//			Hex2RGBB_myrend();
+//
+//		}else if(counter==1){
+//			RainbowGen_NeoPixel();
+//		}
+//		else{
+//			HtoRGB_myrend();
+//		}
+		//W2812B_UpdateData(LED);
+		counter++; // test
+		counter%=3;
+		}
+
+	}
 /* USER CODE END 4 */
 
 /**
