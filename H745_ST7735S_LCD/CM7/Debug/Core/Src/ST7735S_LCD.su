@@ -1,0 +1,5 @@
+../Core/Src/ST7735S_LCD.c:27:6:LCD_init	16	static
+../Core/Src/ST7735S_LCD.c:79:6:LCD_flush	16	static
+../Core/Src/ST7735S_LCD.c:85:10:LCDBufferAddr	4	static
+../Core/Src/ST7735S_LCD.c:90:6:LCD_CMD_SPI_set	16	static
+../Core/Src/ST7735S_LCD.c:97:6:LCD_DATA_SPI_set	16	static

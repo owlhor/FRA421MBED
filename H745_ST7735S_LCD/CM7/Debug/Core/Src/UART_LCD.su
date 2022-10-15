@@ -1,0 +1,6 @@
+../Core/Src/UART_LCD.c:14:6:UARTInit	16	static
+../Core/Src/UART_LCD.c:25:6:UARTResetStart	16	static
+../Core/Src/UART_LCD.c:29:10:UARTGetRxHead	16	static
+../Core/Src/UART_LCD.c:33:9:UARTReadChar	32	static
+../Core/Src/UART_LCD.c:48:6:UARTTxDumpBuffer	24	static
+../Core/Src/UART_LCD.c:75:6:UARTTxWrite	32	static
