@@ -37,7 +37,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_usb.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd_ex.h \
  ../Core/Inc/ST7735S_LCD.h ../Core/Inc/UART_LCD.h \
- ../Core/Inc/BMP_UART_Decode.h
+ ../Core/Inc/BMP_UART_Decode.h ../Core/Inc/ST7735_SF.h \
+ ../Core/Inc/fonts.h ../Core/Inc/ST7735_SFcfg.h ../Core/Inc/main.h \
+ ../Core/Inc/fonts.h ../Core/Inc/testimg.h
 ../Core/Inc/main.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 ../Core/Inc/stm32h7xx_hal_conf.h:
@@ -79,3 +81,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/ST7735S_LCD.h:
 ../Core/Inc/UART_LCD.h:
 ../Core/Inc/BMP_UART_Decode.h:
+../Core/Inc/ST7735_SF.h:
+../Core/Inc/fonts.h:
+../Core/Inc/ST7735_SFcfg.h:
+../Core/Inc/main.h:
+../Core/Inc/fonts.h:
+../Core/Inc/testimg.h:

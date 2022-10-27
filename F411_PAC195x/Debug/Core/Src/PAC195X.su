@@ -1,4 +1,4 @@
 ../Core/Src/PAC195X.c:21:7:PAC_Cal_BusVolt	16	static
 ../Core/Src/PAC195X.c:26:7:PAC_Cal_SnsCurrent	16	static
-../Core/Src/PAC195X.c:32:6:PAC_Read_CTRL	40	static
-../Core/Src/PAC195X.c:52:6:PAC_Read_ID	32	static
+../Core/Src/PAC195X.c:34:6:PAC_Read_CTRL	40	static
+../Core/Src/PAC195X.c:58:6:PAC_Read_ID	32	static

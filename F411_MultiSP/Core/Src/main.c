@@ -31,6 +31,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+//#define dynamix_WRKS
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,27 +57,28 @@ char RxDataBuffer[32] =
 char UIBuffex[50] =
 { 0 };
 
+
 uint8_t flag_spi2_read = 0;
 
 typedef union _MCP3002_SET{
 	struct MC
 	{
-		uint8_t reserv :6; // LSB
-		enum _REQFig{Diff,Diff_Rev,SE_CH0,SE_CH1} REQFig :2; // MSB
+		uint16_t bitread :12;
+		uint16_t reserv :2; // LSB
+		enum _REQFig{M_Diff_01,M_Diff_10,M_SE_CH0,M_SE_CH1} REQFig :2; // MSB
 	}MCP3002_8;
-	uint8_t U8;
+	uint16_t U16;
 }MCP3002_SET;
 
 MCP3002_SET MCrq1;
+MCP3002_SET MCrq2;
+MCP3002_SET MCread1;
+MCP3002_SET MCread2;
 
-typedef union _U16Cvt{
-	uint16_t U16;
-	uint8_t U8[2];
-}U16Cvt;
 
-U16Cvt A_bitreadx;
-uint8_t A_bitread[2] = {0};
-
+uint16_t A_bitread= 0;
+float VADC_c = 0.0;
+////========Dynamix===========================================
 //// 0xFF	0xFF Packet ID	Length	Instruction	Param 1	…	Param N	CHKSUM
 typedef union _dynamixel_buffer_1p0{
 	struct dx{
@@ -88,6 +92,13 @@ typedef union _dynamixel_buffer_1p0{
 	uint8_t U8[15];
 } dynamix_bf10;
 dynamix_bf10 dyna_01;
+
+typedef union _U16Cvt{
+	uint16_t U16;
+	uint8_t U8[2];
+}U16Cvt;
+
+//U16Cvt A_bitreadx;
 
 union {
 	uint8_t U8[2];
@@ -111,7 +122,7 @@ static void MX_SPI2_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_USART6_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void MCP3002_READ(uint16_t pTrX, uint16_t pRcX);
+void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX);
 uint64_t micros();
 int16_t UARTRecieveIT();
 void dynamix_enable_torque();
@@ -157,7 +168,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //HAL_TIM_Base_Start_IT(&htim11);
 
-  MCrq1.MCP3002_8.REQFig = SE_CH1;
+  MCrq1.MCP3002_8.REQFig = M_SE_CH0;
+  MCrq2.MCP3002_8.REQFig = M_SE_CH1;
   HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
 
   dyna_01.dymix.header1 = 0xff;
@@ -177,12 +189,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  //HAL_UART_Receive_IT(&huart6,  (uint8_t*)RxDataBuffer, 32);
 
-	  if(HAL_GetTick()- timestamp_one >= 100){
-		  timestamp_one = HAL_GetTick();
-
-		  flag_spi2_read = 1;
-	  }
-
 	  //// External Watchdog
 	  if(HAL_GetTick()- timestamp_wdg >= 1400 ){ ////&& wdg_tig == 0
 	  		  timestamp_wdg = HAL_GetTick();
@@ -190,6 +196,37 @@ int main(void)
 	  		  HAL_GPIO_TogglePin(WDG_TG_GPIO_Port, WDG_TG_Pin);
 	  	  }
 
+	  ////========SPI MCP3002 ========================================
+	  if(HAL_GetTick()- timestamp_one >= 500){
+		  timestamp_one = HAL_GetTick();
+		  flag_spi2_read = 1;
+	  }
+
+	  if (flag_spi2_read != 0 && hspi2.State == HAL_SPI_STATE_READY
+							&& HAL_GPIO_ReadPin(SPI2_CS_GPIO_Port, SPI2_CS_Pin)
+									== GPIO_PIN_SET)
+		{
+
+		  counter++;
+		  //MCP3002_READ(MCrq1.U16, &MCread1.U16); //&A_bitread
+		  if(counter%2==0){
+			  MCP3002_READ(MCrq1.U16, &MCread1.U16); //&A_bitread
+		  }
+		  else{
+			  MCP3002_READ(MCrq1.U16, &MCrq1.U16); //&A_bitread
+		  }
+
+
+		  //// Dout = ( 4096 x Vin )/ VCC
+		  //// Dout x VCC / 4096 = Vin
+		  //// << 1 to add 1 lost LSB
+		  VADC_c = (MCread1.MCP3002_8.bitread << 1) * 0.00120; //// 1/4096 *5 = 5 * 0.000244140625
+
+		  flag_spi2_read = 0;
+		}
+
+#ifdef dynamix_WRKS
+	  //////========== Dynamixel =======
 	  if(HAL_GetTick()- timestamp_dmx >= 500){
 			  //// && flag_dyna != 0
 		  	  timestamp_dmx = HAL_GetTick();
@@ -226,15 +263,7 @@ int main(void)
 			  //HAL_UART_Receive_IT(&huart6,  (uint8_t*)RxDataBuffer, 32);
 			  //flag_dyna--;
 	  	  	  }
-//
-//	  if (flag_spi2_read != 0 && hspi2.State == HAL_SPI_STATE_READY
-//	  	  					&& HAL_GPIO_ReadPin(SPI2_CS_GPIO_Port, SPI2_CS_Pin)
-//	  	  							== GPIO_PIN_SET)
-//	  	{
-//		  // chip select set, prevent unfinished previous task
-//		  counter++;
-//		  MCP3002_READ(MCrq1.U8, A_bitreadx.U16); //&A_bitread[0]
-//		}
+#endif
 
   }
   /* USER CODE END 3 */
@@ -309,7 +338,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -528,18 +557,22 @@ int16_t UARTRecieveIT() // find last update position and return data in that pos
 	return data;
 }
 
-void MCP3002_READ(uint16_t pTrX, uint16_t pRcX){
-	//uint16_t datain = 0b1100000000000000;
-	HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_RESET);
-	//HAL_SPI_Transmit(&hspi2, &datain, 1, 100);
-	//HAL_SPI_Transmit_IT(&hspi2, &datain, 100);
-	//HAL_SPI_Receive(&hspi2, &A_bitread[0], 2, 100);
-	//HAL_SPI_TransmitReceive(&hspi2, &pTrX, &pRcX, 2, 100);
+void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX){
 
-	//HAL_SPI_TransmitReceive_IT(&hspi2, &datain, &pRcX, 2);
+	//uint16_t datain = pTrX; //0b1100000000000000
+	HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_RESET);
+	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
+	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
+
+	HAL_SPI_TransmitReceive_IT(&hspi2, &pTrX, pRcX, 1);
+
+	//// Dout = ( 4096 x Vin )/ VCC
+	//// Dout x VCC / 4096 = Vin
+
 }
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if (hspi == &hspi2)
 	{
@@ -551,7 +584,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
 		//wdg_tig++; // trickey stop watchdog tog
-
+		flag_spi2_read = 1;
 		}
 }
 

@@ -141,8 +141,8 @@ int main(void)
 		  Busvv = 0.000488281 * testp_2.tst16[1];
 		  Busv = PAC_Cal_BusVolt(testp_2.tst16[1]);
 		  PAC_Read_CTRL(&hi2c1, ADDR_PAC, 0);
-		  int aaa = PAC_CTRL_ACT_read.PACCTRL.SAMPLE_MODE;
-		  PAC_CTRL_read.PACCTRL.GPIO_ALERT2 = S_256AA;
+//		  int aaa = PAC_CTRL_ACT_read.PACCTRL.SAMPLE_MODE;
+//		  PAC_CTRL_read.PACCTRL.GPIO_ALERT2 = S_256AA;
 	  }
 
 

@@ -31,23 +31,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  13 .ARM.attributes 0000002e  00000000  00000000  00020144  2**0
                   CONTENTS, READONLY
- 14 .debug_info   0001ecf5  00000000  00000000  00020172  2**0
+ 14 .debug_info   0001efc6  00000000  00000000  00020172  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_abbrev 00003450  00000000  00000000  0003ee67  2**0
+ 15 .debug_abbrev 000034c7  00000000  00000000  0003f138  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_aranges 00001380  00000000  00000000  000422b8  2**3
+ 16 .debug_aranges 00001388  00000000  00000000  00042600  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_ranges 00001238  00000000  00000000  00043638  2**3
+ 17 .debug_ranges 00001240  00000000  00000000  00043988  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_macro  0003bdb1  00000000  00000000  00044870  2**0
+ 18 .debug_macro  0003bd7f  00000000  00000000  00044bc8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_line   0001b7e6  00000000  00000000  00080621  2**0
+ 19 .debug_line   0001b98b  00000000  00000000  00080947  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_str    0018532b  00000000  00000000  0009be07  2**0
+ 20 .debug_str    00185a57  00000000  00000000  0009c2d2  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .comment      00000050  00000000  00000000  00221132  2**0
+ 21 .comment      00000050  00000000  00000000  00221d29  2**0
                   CONTENTS, READONLY
- 22 .debug_frame  00005420  00000000  00000000  00221184  2**2
+ 22 .debug_frame  0000544c  00000000  00000000  00221d7c  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1876,11 +1876,11 @@ Error_Handler();
   	UARTResetStart(&UART2);
  8000f3a:	4810      	ldr	r0, [pc, #64]	; (8000f7c <main+0x138>)
  8000f3c:	f7ff fe9d 	bl	8000c7a <UARTResetStart>
-  while (1)
-  {
-    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  //demoTFT();
+	  //// Read  .bmp from UART Terra terms//////
 	  int16_t read = UARTReadChar(&UART2) ;
  8000f40:	480e      	ldr	r0, [pc, #56]	; (8000f7c <main+0x138>)
  8000f42:	f7ff ff55 	bl	8000df0 <UARTReadChar>
