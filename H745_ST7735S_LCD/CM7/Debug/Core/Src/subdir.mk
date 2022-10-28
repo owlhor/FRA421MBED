@@ -7,7 +7,7 @@
 C_SRCS += \
 ../Core/Src/BMP_UART_Decode.c \
 ../Core/Src/ST7735S_LCD.c \
-../Core/Src/ST7735_SF.c \
+../Core/Src/ST7735_af.c \
 ../Core/Src/UART_LCD.c \
 ../Core/Src/fonts.c \
 ../Core/Src/main.c \
@@ -19,7 +19,7 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/BMP_UART_Decode.o \
 ./Core/Src/ST7735S_LCD.o \
-./Core/Src/ST7735_SF.o \
+./Core/Src/ST7735_af.o \
 ./Core/Src/UART_LCD.o \
 ./Core/Src/fonts.o \
 ./Core/Src/main.o \
@@ -31,7 +31,7 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/BMP_UART_Decode.d \
 ./Core/Src/ST7735S_LCD.d \
-./Core/Src/ST7735_SF.d \
+./Core/Src/ST7735_af.d \
 ./Core/Src/UART_LCD.d \
 ./Core/Src/fonts.d \
 ./Core/Src/main.d \
@@ -48,7 +48,7 @@ Core/Src/%.o Core/Src/%.su: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/BMP_UART_Decode.d ./Core/Src/BMP_UART_Decode.o ./Core/Src/BMP_UART_Decode.su ./Core/Src/ST7735S_LCD.d ./Core/Src/ST7735S_LCD.o ./Core/Src/ST7735S_LCD.su ./Core/Src/ST7735_SF.d ./Core/Src/ST7735_SF.o ./Core/Src/ST7735_SF.su ./Core/Src/UART_LCD.d ./Core/Src/UART_LCD.o ./Core/Src/UART_LCD.su ./Core/Src/fonts.d ./Core/Src/fonts.o ./Core/Src/fonts.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32h7xx_hal_msp.d ./Core/Src/stm32h7xx_hal_msp.o ./Core/Src/stm32h7xx_hal_msp.su ./Core/Src/stm32h7xx_it.d ./Core/Src/stm32h7xx_it.o ./Core/Src/stm32h7xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su
+	-$(RM) ./Core/Src/BMP_UART_Decode.d ./Core/Src/BMP_UART_Decode.o ./Core/Src/BMP_UART_Decode.su ./Core/Src/ST7735S_LCD.d ./Core/Src/ST7735S_LCD.o ./Core/Src/ST7735S_LCD.su ./Core/Src/ST7735_af.d ./Core/Src/ST7735_af.o ./Core/Src/ST7735_af.su ./Core/Src/UART_LCD.d ./Core/Src/UART_LCD.o ./Core/Src/UART_LCD.su ./Core/Src/fonts.d ./Core/Src/fonts.o ./Core/Src/fonts.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32h7xx_hal_msp.d ./Core/Src/stm32h7xx_hal_msp.o ./Core/Src/stm32h7xx_hal_msp.su ./Core/Src/stm32h7xx_it.d ./Core/Src/stm32h7xx_it.o ./Core/Src/stm32h7xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su
 
 .PHONY: clean-Core-2f-Src
 

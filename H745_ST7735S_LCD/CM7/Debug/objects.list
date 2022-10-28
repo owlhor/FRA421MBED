@@ -1,7 +1,7 @@
 "./Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.o"
 "./Core/Src/BMP_UART_Decode.o"
 "./Core/Src/ST7735S_LCD.o"
-"./Core/Src/ST7735_SF.o"
+"./Core/Src/ST7735_af.o"
 "./Core/Src/UART_LCD.o"
 "./Core/Src/fonts.o"
 "./Core/Src/main.o"

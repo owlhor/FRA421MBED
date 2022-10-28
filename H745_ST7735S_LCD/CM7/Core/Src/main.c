@@ -26,7 +26,9 @@
 #include "UART_LCD.h"
 #include "BMP_UART_Decode.h"
 
-#include "ST7735_SF.h"
+//#include "ST7735_SF.h"
+#include "ST7735_af.h"
+
 #include "fonts.h"
 #include "testimg.h"
 /* USER CODE END Includes */
@@ -98,6 +100,7 @@ static void MX_SPI1_Init(void);
 static void MX_DMA_Init(void);
 /* USER CODE BEGIN PFP */
 void demoTFT();
+void af_loop();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -169,23 +172,26 @@ Error_Handler();
   MX_DMA_Init();
   /* USER CODE BEGIN 2 */
 
-  	ST7735S.hspi = &hspi1;
-  	ST7735S.CSPort = GPIOD;
-  	ST7735S.CSPin = GPIO_PIN_14;
-  	ST7735S.DCPort = GPIOD;
-  	ST7735S.DCPin = GPIO_PIN_15;
-  	ST7735S.RstPort = GPIOG;
-  	ST7735S.RstPin = GPIO_PIN_9;
-  	LCD_init(&ST7735S);
-  	LCD_flush(&ST7735S);
-  	UART2.huart = &huart3;
-  	UART2.RxLen =255;
-  	UART2.TxLen =255;
-  	UARTInit(&UART2);
-  	UARTResetStart(&UART2);
+//  	ST7735S.hspi = &hspi1;
+//  	ST7735S.CSPort = GPIOD;
+//  	ST7735S.CSPin = GPIO_PIN_14;
+//  	ST7735S.DCPort = GPIOD;
+//  	ST7735S.DCPin = GPIO_PIN_15;
+//  	ST7735S.RstPort = GPIOG;
+//  	ST7735S.RstPin = GPIO_PIN_9;
+//  	LCD_init(&ST7735S);
+//  	LCD_flush(&ST7735S);
+//  	UART2.huart = &huart3;
+//  	UART2.RxLen =255;
+//  	UART2.TxLen =255;
+//  	UARTInit(&UART2);
+//  	UARTResetStart(&UART2);
 
-//  ST7735_Init();
-//  ST7735_Backlight_On();
+
+
+  	ST7735_Init();
+//	const char ready[] = "Ready!\r\n";
+//	HAL_UART_Transmit(&huart3, (uint8_t*)ready, sizeof(ready)-1, HAL_MAX_DELAY);
 
   /* USER CODE END 2 */
 
@@ -198,12 +204,13 @@ Error_Handler();
     /* USER CODE BEGIN 3 */
 
 	  //demoTFT();
+	  af_loop();
 	  //// Read  .bmp from UART Terra terms//////
-	  int16_t read = UARTReadChar(&UART2) ;
-	  		if(read != -1)
-	  			{
-	  				BMPDecoder(read, LCDBufferAddr());
-	  			}
+//	  int16_t read = UARTReadChar(&UART2) ;
+//	  		if(read != -1)
+//	  			{
+//	  				BMPDecoder(read, LCDBufferAddr());
+//	  			}
 
 	  ///////////////////////////////////////////
   }
@@ -518,103 +525,184 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void af_loop(){
+	// Check border
+//	    ST7735_FillScreen(ST7735_BLACK);
+//
+//	    for(int x = 0; x < ST7735_WIDTH; x++) {
+//	        ST7735_DrawPixel(x, 0, ST7735_RED);
+//	        ST7735_DrawPixel(x, ST7735_HEIGHT-1, ST7735_RED);
+//	    }
+//
+//	    for(int y = 0; y < ST7735_HEIGHT; y++) {
+//	        ST7735_DrawPixel(0, y, ST7735_RED);
+//	        ST7735_DrawPixel(ST7735_WIDTH-1, y, ST7735_RED);
+//	    }
+//
+//	    HAL_Delay(3000);
 
-void demoTFT(void)
-{
- ST7735_SetRotation(r);
+	    // Check fonts
+	    ST7735_FillScreen(ST7735_BLACK);
+	    ST7735_WriteString(0, 0, "Font_7x10, red on black, lorem ipsum dolor sit amet", Font_7x10, ST7735_RED, ST7735_BLACK);
+	    ST7735_WriteString(0, 3*10, "Font_11x18, green, lorem ipsum", Font_11x18, ST7735_GREEN, ST7735_BLACK);
+	    ST7735_WriteString(0, 3*10+3*18, "Font_16x26", Font_16x26, ST7735_BLUE, ST7735_BLACK);
+	    HAL_Delay(2000);
 
- ST7735_FillScreen(ST7735_BLACK);
+	    // Check colors
+//	    ST7735_FillScreen(ST7735_BLACK);
+//	    ST7735_WriteString(0, 0, "BLACK", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+//	    HAL_Delay(500);
+//
+//	    ST7735_FillScreen(ST7735_BLUE);
+//	    ST7735_WriteString(0, 0, "BLUE", Font_11x18, ST7735_BLACK, ST7735_BLUE);
+//	    HAL_Delay(500);
+//
+//	    ST7735_FillScreen(ST7735_RED);
+//	    ST7735_WriteString(0, 0, "RED", Font_11x18, ST7735_BLACK, ST7735_RED);
+//	    HAL_Delay(500);
+//
+//	    ST7735_FillScreen(ST7735_GREEN);
+//	    ST7735_WriteString(0, 0, "GREEN", Font_11x18, ST7735_BLACK, ST7735_GREEN);
+//	    HAL_Delay(500);
 
- for(int x = 0; x < ST7735_GetWidth(); x++)
- {
-   ST7735_DrawPixel(x, 0, ST7735_WHITE);
-   ST7735_DrawPixel(x, ST7735_GetHeight() - 1, ST7735_WHITE);
- }
+	    ST7735_FillScreen(ST7735_CYAN);
+	    ST7735_WriteString(0, 0, "CYAN", Font_11x18, ST7735_BLACK, ST7735_CYAN);
+	    HAL_Delay(500);
 
- for(int y = 0; y < ST7735_GetHeight(); y++)
- {
-   ST7735_DrawPixel(0, y, ST7735_WHITE);
-   ST7735_DrawPixel(ST7735_GetWidth() - 1, y, ST7735_WHITE);
- }
+	    ST7735_FillScreen(ST7735_MAGENTA);
+	    ST7735_WriteString(0, 0, "MAGENTA", Font_11x18, ST7735_BLACK, ST7735_MAGENTA);
+	    HAL_Delay(500);
 
- ST7735_DrawLine(0, 0, ST7735_GetWidth(), ST7735_GetHeight(), ST7735_WHITE);
- ST7735_DrawLine(ST7735_GetWidth(), 0, 0, ST7735_GetHeight(), ST7735_WHITE);
+	    ST7735_FillScreen(ST7735_YELLOW);
+	    ST7735_WriteString(0, 0, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
+	    HAL_Delay(500);
 
- HAL_Delay(2000);
+	    ST7735_FillScreen(ST7735_WHITE);
+	    ST7735_WriteString(0, 0, "WHITE", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+	    HAL_Delay(500);
 
- ST7735_FillScreen(ST7735_BLACK);
+	#ifdef ST7735_IS_128X128
+	    // Display test image 128x128
+	    ST7735_DrawImage(0, 0, ST7735_WIDTH, ST7735_HEIGHT, (uint16_t*)image_data_Imageoftest);
+	    ////test_img_128x128
+	    HAL_Delay(3500);
 
- for (int i = 0; i < ST7735_GetHeight(); i += 4)
- {
-  ST7735_DrawFastHLine(0, i, ST7735_GetWidth() - 1, ST7735_WHITE);
- }
+	    ST7735_FillScreen(ST7735_YELLOW);
+		ST7735_WriteString(40, 10, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
+		HAL_Delay(500);
 
- for (int i = 0; i < ST7735_GetWidth(); i += 4)
- {
-  ST7735_DrawFastVLine(i, 0, ST7735_GetHeight() - 1, ST7735_WHITE);
- }
+	    // Display test image 128x128 pixel by pixel
+	    for(int y = 0; y < ST7735_HEIGHT; y++) {
+	        for(int x = 0; x < ST7735_WIDTH; x++) {
+	            uint16_t color565 = test_img_128x128[y][x];
+	            // fix endiness
+	            color565 = ((color565 & 0xFF00) >> 8) | ((color565 & 0xFF) << 8);
+	            ST7735_DrawPixel(x, y, color565);
+	        }
+	    }
 
- HAL_Delay(2000);
+	    HAL_Delay(5000);
+	#endif // ST7735_IS_128X128
 
- // Check fonts
- ST7735_FillScreen(ST7735_BLACK);
- ST7735_DrawString(0, 0, "Font_7x10, red on black, lorem ipsum dolor sit amet", Font_7x10, ST7735_RED, ST7735_BLACK);
- ST7735_DrawString(0, 3*10, "Font_11x18, green, lorem ipsum", Font_11x18, ST7735_GREEN, ST7735_BLACK);
- ST7735_DrawString(0, 3*10+3*18, "Font_16x26", Font_16x26, ST7735_BLUE, ST7735_BLACK);
- HAL_Delay(2000);
+	}
 
- // Check colors
- ST7735_FillScreen(ST7735_BLACK);
- ST7735_DrawString(0, 0, "BLACK", Font_11x18, ST7735_WHITE, ST7735_BLACK);
- HAL_Delay(500);
 
- ST7735_FillScreen(ST7735_BLUE);
- ST7735_DrawString(0, 0, "BLUE", Font_11x18, ST7735_BLACK, ST7735_BLUE);
- HAL_Delay(500);
 
- ST7735_FillScreen(ST7735_RED);
- ST7735_DrawString(0, 0, "RED", Font_11x18, ST7735_BLACK, ST7735_RED);
- HAL_Delay(500);
-
- ST7735_FillScreen(ST7735_GREEN);
- ST7735_DrawString(0, 0, "GREEN", Font_11x18, ST7735_BLACK, ST7735_GREEN);
- HAL_Delay(500);
-
- ST7735_FillScreen(ST7735_CYAN);
- ST7735_DrawString(0, 0, "CYAN", Font_11x18, ST7735_BLACK, ST7735_CYAN);
- HAL_Delay(500);
-
- ST7735_FillScreen(ST7735_MAGENTA);
- ST7735_DrawString(0, 0, "MAGENTA", Font_11x18, ST7735_BLACK, ST7735_MAGENTA);
- HAL_Delay(500);
-
- ST7735_FillScreen(ST7735_YELLOW);
- ST7735_DrawString(0, 0, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
- HAL_Delay(500);
-
- ST7735_FillScreen(ST7735_WHITE);
- ST7735_DrawString(0, 0, "WHITE", Font_11x18, ST7735_BLACK, ST7735_WHITE);
- HAL_Delay(500);
-
- // Draw circles
- ST7735_FillScreen(ST7735_BLACK);
- for (int i = 0; i < ST7735_GetHeight() / 2; i += 2)
- {
-  ST7735_DrawCircle(ST7735_GetWidth() / 2, ST7735_GetHeight() / 2, i, ST7735_YELLOW);
- }
- HAL_Delay(1000);
-
- ST7735_FillScreen(ST7735_BLACK);
- ST7735_FillTriangle(0, 0, ST7735_GetWidth() / 2, ST7735_GetHeight(), ST7735_GetWidth(), 0, ST7735_RED);
- HAL_Delay(1000);
-
- ST7735_FillScreen(ST7735_BLACK);
- ST7735_DrawImage(0, 0, 128, 128, (uint16_t*) test_img_128x128);
- HAL_Delay(3000);
-
- r++;
-}
-
+//void demoTFT(void)
+//{
+// ST7735_SetRotation(r);
+//
+// ST7735_FillScreen(ST7735_BLACK);
+//
+// for(int x = 0; x < ST7735_GetWidth(); x++)
+// {
+//   ST7735_DrawPixel(x, 0, ST7735_WHITE);
+//   ST7735_DrawPixel(x, ST7735_GetHeight() - 1, ST7735_WHITE);
+// }
+//
+// for(int y = 0; y < ST7735_GetHeight(); y++)
+// {
+//   ST7735_DrawPixel(0, y, ST7735_WHITE);
+//   ST7735_DrawPixel(ST7735_GetWidth() - 1, y, ST7735_WHITE);
+// }
+//
+// ST7735_DrawLine(0, 0, ST7735_GetWidth(), ST7735_GetHeight(), ST7735_WHITE);
+// ST7735_DrawLine(ST7735_GetWidth(), 0, 0, ST7735_GetHeight(), ST7735_WHITE);
+//
+// HAL_Delay(2000);
+//
+// ST7735_FillScreen(ST7735_BLACK);
+//
+// for (int i = 0; i < ST7735_GetHeight(); i += 4)
+// {
+//  ST7735_DrawFastHLine(0, i, ST7735_GetWidth() - 1, ST7735_WHITE);
+// }
+//
+// for (int i = 0; i < ST7735_GetWidth(); i += 4)
+// {
+//  ST7735_DrawFastVLine(i, 0, ST7735_GetHeight() - 1, ST7735_WHITE);
+// }
+//
+// HAL_Delay(2000);
+//
+// // Check fonts
+// ST7735_FillScreen(ST7735_BLACK);
+// ST7735_DrawString(0, 0, "Font_7x10, red on black, lorem ipsum dolor sit amet", Font_7x10, ST7735_RED, ST7735_BLACK);
+// ST7735_DrawString(0, 3*10, "Font_11x18, green, lorem ipsum", Font_11x18, ST7735_GREEN, ST7735_BLACK);
+// ST7735_DrawString(0, 3*10+3*18, "Font_16x26", Font_16x26, ST7735_BLUE, ST7735_BLACK);
+// HAL_Delay(2000);
+//
+// // Check colors
+// ST7735_FillScreen(ST7735_BLACK);
+// ST7735_DrawString(0, 0, "BLACK", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_BLUE);
+// ST7735_DrawString(0, 0, "BLUE", Font_11x18, ST7735_BLACK, ST7735_BLUE);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_RED);
+// ST7735_DrawString(0, 0, "RED", Font_11x18, ST7735_BLACK, ST7735_RED);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_GREEN);
+// ST7735_DrawString(0, 0, "GREEN", Font_11x18, ST7735_BLACK, ST7735_GREEN);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_CYAN);
+// ST7735_DrawString(0, 0, "CYAN", Font_11x18, ST7735_BLACK, ST7735_CYAN);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_MAGENTA);
+// ST7735_DrawString(0, 0, "MAGENTA", Font_11x18, ST7735_BLACK, ST7735_MAGENTA);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_YELLOW);
+// ST7735_DrawString(0, 0, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
+// HAL_Delay(500);
+//
+// ST7735_FillScreen(ST7735_WHITE);
+// ST7735_DrawString(0, 0, "WHITE", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+// HAL_Delay(500);
+//
+// // Draw circles
+// ST7735_FillScreen(ST7735_BLACK);
+// for (int i = 0; i < ST7735_GetHeight() / 2; i += 2)
+// {
+//  ST7735_DrawCircle(ST7735_GetWidth() / 2, ST7735_GetHeight() / 2, i, ST7735_YELLOW);
+// }
+// HAL_Delay(1000);
+//
+// ST7735_FillScreen(ST7735_BLACK);
+// ST7735_FillTriangle(0, 0, ST7735_GetWidth() / 2, ST7735_GetHeight(), ST7735_GetWidth(), 0, ST7735_RED);
+// HAL_Delay(1000);
+//
+// ST7735_FillScreen(ST7735_BLACK);
+// ST7735_DrawImage(0, 0, 128, 128, (uint16_t*) test_img_128x128);
+// HAL_Delay(3000);
+//
+// r++;
+//}
 
 /* USER CODE END 4 */
 
