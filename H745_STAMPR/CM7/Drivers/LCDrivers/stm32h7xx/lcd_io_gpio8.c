@@ -7,6 +7,8 @@
  * Author: Roberto Benjami
  * version:  2020.12.22
  */
+#define LCDMANAGERRR_OHLock2
+#ifdef LCDMANAGERRR_OHLock2
 
 #include "main.h"
 #include "../lcd.h"
@@ -635,3 +637,5 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
 void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
 void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
 #endif
+
+#endif // LCDMANAGERRR_OHLock

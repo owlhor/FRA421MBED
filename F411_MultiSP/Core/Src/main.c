@@ -33,6 +33,8 @@
 /* USER CODE BEGIN PD */
 
 //#define dynamix_WRKS
+#define MCP3002_WRK
+#define EXT_WWDG_TGGR
 
 /* USER CODE END PD */
 
@@ -189,13 +191,17 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  //HAL_UART_Receive_IT(&huart6,  (uint8_t*)RxDataBuffer, 32);
 
+#ifdef EXT_WWDG_TGGR
 	  //// External Watchdog
 	  if(HAL_GetTick()- timestamp_wdg >= 1400 ){ ////&& wdg_tig == 0
 	  		  timestamp_wdg = HAL_GetTick();
 	  		  // Toggle edge to watchdog xternal ic
 	  		  HAL_GPIO_TogglePin(WDG_TG_GPIO_Port, WDG_TG_Pin);
+	  		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  	  }
+#endif
 
+#ifdef MCP3002_WRK
 	  ////========SPI MCP3002 ========================================
 	  if(HAL_GetTick()- timestamp_one >= 500){
 		  timestamp_one = HAL_GetTick();
@@ -224,6 +230,7 @@ int main(void)
 
 		  flag_spi2_read = 0;
 		}
+#endif
 
 #ifdef dynamix_WRKS
 	  //////========== Dynamixel =======

@@ -215,6 +215,7 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint
 }
 */
 
+//// ST7735_WriteString(40, 10, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
 void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
     ST7735_Select();
 
