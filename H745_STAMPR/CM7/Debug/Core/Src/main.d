@@ -36,7 +36,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_usb.h \
  ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd_ex.h \
- ../Core/Src/../../../Common/Src/SRAM4.h \
+ ../LIBJPEG/App/libjpeg.h \
+ ../../Middlewares/Third_Party/LibJPEG/include/jpeglib.h \
+ ../LIBJPEG/Target/jconfig.h ../LIBJPEG/Target/jdata_conf.h \
+ ../LIBJPEG/Target/jmorecfg.h ../Core/Src/../../../Common/Src/SRAM4.h \
  ../Core/Src/../../Drivers/LCDrivers/lcd/ili9486/ili9486.h
 ../Core/Inc/main.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
@@ -76,5 +79,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_usb.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pcd_ex.h:
+../LIBJPEG/App/libjpeg.h:
+../../Middlewares/Third_Party/LibJPEG/include/jpeglib.h:
+../LIBJPEG/Target/jconfig.h:
+../LIBJPEG/Target/jdata_conf.h:
+../LIBJPEG/Target/jmorecfg.h:
 ../Core/Src/../../../Common/Src/SRAM4.h:
 ../Core/Src/../../Drivers/LCDrivers/lcd/ili9486/ili9486.h:

@@ -3,6 +3,8 @@
  *
  *  Created on: Nov 18, 2022
  *      Author: owl_hor
+ *
+ *  Use Raspberry pi & import datetime to write timevalue into DS3231
  */
 
 
@@ -22,5 +24,28 @@ void DS3231_Read(I2C_HandleTypeDef *hi2c){
 	}
 
 }
+
+
+//// Sync timevalue when boot(in case Vbat is not powered)
+void EXIN_RTC_SYNC(I2C_HandleTypeDef *hi2c, RTC_HandleTypeDef *hrtc){
+	DS3231_Read(hi2c);
+
+	RTC_TimeTypeDef sTime={0};
+	sTime.Hours = ERTC_lg.DS3231RG.hour; //
+	sTime.Minutes = ERTC_lg.DS3231RG.min;
+	sTime.Seconds = ERTC_lg.DS3231RG.sec;
+
+	HAL_RTC_SetTime(hrtc, &sTime, RTC_FORMAT_BCD);
+
+	RTC_DateTypeDef sDate ={0};
+	sDate.Date = ERTC_lg.DS3231RG.date;
+	sDate.Month = ERTC_lg.DS3231RG.month;
+	sDate.WeekDay = ERTC_lg.DS3231RG.wkday;
+	sDate.Year = ERTC_lg.DS3231RG.year;
+
+	HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT_BCD);
+}
+
+
 
 #endif

@@ -29,4 +29,6 @@ Drivers/LCDrivers/lcd/ili9486 \
 Drivers/LCDrivers \
 Drivers/LCDrivers/stm32h7xx \
 Drivers/STM32H7xx_HAL_Driver \
+LIBJPEG/App \
+Middlewares/Third_Party/LibJPEG \
 

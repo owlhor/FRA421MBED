@@ -143,7 +143,10 @@ int main(void)
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_Base_Start_IT(&htim17);
+  //HAL_TIM_Base_Start_IT(&htim17);
+
+  //// Start sync EXIN RTC
+  EXIN_RTC_SYNC(&hi2c2,&hrtc);
   /* USER CODE END 2 */
 
   /* Infinite loop */

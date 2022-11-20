@@ -9,6 +9,8 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/LibJPEG/subdir.mk
+-include LIBJPEG/App/subdir.mk
 -include Drivers/STM32H7xx_HAL_Driver/subdir.mk
 -include Drivers/LCDrivers/stm32h7xx/subdir.mk
 -include Drivers/LCDrivers/lcd/ili9486/subdir.mk
