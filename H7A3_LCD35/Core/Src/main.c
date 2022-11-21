@@ -21,8 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "LCDrivers/Fonts/fonts.h"
 #include "LCDrivers/ili9486.h"
 #include "testimg.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +54,19 @@ uint8_t flag_blue = 0;
 
 static uint8_t ff = 0;
 
+////// for fontwrite test
+union {
+	uint8_t b8[4];
+	uint32_t b32;
+}buu32;
+uint8_t rowbox;
+uint16_t chpos;
+uint32_t bfpos = 0;
+uint32_t hop = 0;
+uint32_t cliff = 0;
+////// for fontwrite test
+
+
 uint32_t timestamp_one = 0;
 uint32_t timestamp_two = 0;
 
@@ -67,6 +82,7 @@ static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 uint64_t micros();
 void ili_screen_1();
+void ili_fonttest(uint16_t Xpo, uint16_t Ypo, char *chr, sFONT fonto, uint16_t RGB_Coder);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -117,6 +133,9 @@ int main(void)
   baaa[0] = ili9486_GetLcdPixelWidth();
   baaa[1] = ili9486_GetLcdPixelHeight();
   baaa[2] = ili9486_ReadID();
+
+  //// force start testfont screen 3
+  flag_blue = 3;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -138,7 +157,6 @@ int main(void)
 	  if(flag_blue == 4){
 		  BSP_LCD_Clear(0xff00);
 		  BSP_LCD_DrawRect(50, 50, 50, 50);
-
 		  flag_blue = 0;
 	  }
 
@@ -165,7 +183,21 @@ int main(void)
 			  ili9486_WriteChar(110, 50, "E", Font20, cl_WHITE);
 			  ili9486_WriteChar(140, 50, "E", Font24, cl_WHITE);
 
-	  		  flag_blue = 0;
+			  //ili9486_FillRect(198, 30, 2, 30, cl_YELLOW);
+			  ili9486_DrawVLine(cl_YELLOW, 200, 40, 24);
+			  ili9486_DrawVLine(cl_YELLOW, 225, 40, 24);
+			  //// Font24 @2664 E
+			  ili_fonttest(200, 40, "A", Font24, cl_WHITE);
+			  ili_fonttest(225, 40, "B", Font24, cl_WHITE);
+			  ili_fonttest(250, 40, "C", Font24, cl_WHITE);
+			  ili_fonttest(275, 40, "D", Font24, cl_WHITE);
+
+			  ili_fonttest(300, 40, "A", Font8, cl_WHITE);
+			  ili_fonttest(325, 40, "B", Font12, cl_WHITE);
+			  ili_fonttest(350, 40, "C", Font16, cl_WHITE);
+			  ili_fonttest(375, 40, "D", Font20, cl_WHITE);
+
+	  		  flag_blue = 0; // comment this to forever loop
 	  	  }
 
 	  if(flag_blue == 1){
@@ -465,6 +497,43 @@ void ili_screen_1(){
 	  ili9486_FillRect(270, 160, 100, 100, cl_YELLOW); // Y0xFFE0
 	  ili9486_FillRect(390, 30, 70, 230, cl_BLACK); // K
 }
+
+void ili_fonttest(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder){
+
+	rowbox = ceilf((float)(fonto.Width) / 8);
+	//// choose MSB check pos for each font size
+	cliff = 0x80 << (8 * (rowbox - 1));
+	//rowbox = (fonto.Width / 8) + 1;
+
+	for(int i = 0; i < fonto.Height; i++){
+		//b = fonto.table[((chr - 31) * fonto.Height * rowbox)+ (i*rowbox)];
+		chpos = (int)(*chr) - 32;
+		bfpos = ((int)(*chr) - 32) * fonto.Height * rowbox;
+
+		hop = 0;
+		for(int k = 0; k < rowbox; k++){
+			//// how to insert in union
+			buu32.b8[k] = fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k];
+//			buu32.b32 = (buu32.b32 << (int)(8 * k)) | (fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k]);
+			hop = (hop << 8) + buu32.b8[k];
+			//HAL_Delay(30);
+		}
+
+		/////// note: 22/11/65
+		//// search from b8[0],b8[1],... solve little font loss
+
+		for(int j = 0; j < fonto.Width; j++){
+
+			if((hop << j) & cliff){ // buu32.b32
+				ili9486_WritePixel(Xpo + j, Ypo + i, RGB_Coder);
+			}
+
+
+
+		}
+	}
+}
+
 
 uint64_t micros()
 {return _micros + htim17.Instance->CNT;}

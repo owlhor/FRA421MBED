@@ -512,35 +512,51 @@ void ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 
 /* FontWrite cat cat by owlhor*/
 void ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char chr,sFONT fonto, uint16_t RGB_Coder){
-	uint8_t i,j = 0; //// ij is sizeof char table, b is start pos at fonttable
-	uint32_t b;
+	uint8_t i,j = 0; //// ij is sizeof char table, b is start pos at fonttable & data in font
+	//uint32_t b;
+
+	union {
+		uint8_t b8[4];
+		uint32_t b32;
+	}bu32;
 	/* _ X+ ------>
 	 * Y+
 	 * |
 	 * |
 	 * V
-	 * font_h x width=>  column x row per jump
+	 * font_h x width=>  column x row per jump / start pos for char 1 2 3 4 ...
 	 * font8  x 5 =>  8x1 byte per jump  8 16 24 32 40
 	 * font12 x 7 =>  12x1 byte per jump 12 24 36 48 60
 	 * font16 x 11=>  16x2 byte per jump 32 64 96 128 160
 	 * font24 x 17=>  24x3 byte per jump 72 144 216 288 310
+	 *
+	 *  Data loading = b + c + k;
+	 * b = (char ASCII Code * high * row per jump) --> Sorting start position
+	 * c = i * rowbox -> jump to next column in next i rowloop
+	 * k => jump to next row in that column
 	 * */
+	//// find num of bit rows per jump in fonts.c
+	int rowbox = roundf((float)(fonto.Width) / 8);
+	//int rowbox = (fonto.Width / 8) + 1;
 	//// double for loop as one char table
-	int rowbox = (fonto.Width / 8) + 1;
-
 	for(i = 0; i < fonto.Height; i++){
 		//// -32 to offset sync ASCII Table start " " at 32
 
-		b = fonto.table[((chr - 31) * fonto.Height * rowbox)+ (i*rowbox)];
+		//// Load data 1 column per loop
+		//b = fonto.table[((chr - 31) * fonto.Height * rowbox)+ (i*rowbox)];
 
-//		for(int k = 0;k <rowbox; k++){
-//			b = (b << (8 * k)) & (fonto.table[((chr - 32) * fonto.Height * rowbox) + (i*rowbox) + k]);
-//		}
+		for(int k = 0;k < rowbox;k++){
+			bu32.b8[k] = fonto.table[((chr - 32) * fonto.Height * rowbox)+ (i*rowbox) + k];
+//			b = (b << (int)(8 * k)) & (fonto.table[((chr - 32) * fonto.Height * rowbox) + (i*rowbox) + k]);
+
+		}
+
 
 		for(j = 0; j < fonto.Width; j++){
 			//// if valuein fonttable is 1
 			//// (b << j) & 0x80 -> seek at MSB First
-			if((b << j) & 0x80){
+			if((bu32.b32 << j) & 0x8000){
+			//if((b << j) & 0x8000){
 				ili9486_WritePixel(j + Xpo, Ypo + i, RGB_Coder);
 			}
 

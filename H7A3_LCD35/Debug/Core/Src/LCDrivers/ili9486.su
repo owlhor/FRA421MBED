@@ -15,4 +15,4 @@
 ../Core/Src/LCDrivers/ili9486.c:484:6:ili9486_DrawRGBImage	24	static
 ../Core/Src/LCDrivers/ili9486.c:503:6:ili9486_ReadRGBImage	24	static
 ../Core/Src/LCDrivers/ili9486.c:514:6:ili9486_WriteChar	32	static
-../Core/Src/LCDrivers/ili9486.c:602:6:ili9486_Scroll	16	static
+../Core/Src/LCDrivers/ili9486.c:618:6:ili9486_Scroll	16	static
