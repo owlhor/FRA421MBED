@@ -1067,11 +1067,11 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint
  8000a54:	4770      	bx	lr
 
 08000a56 <ST7735_WriteString>:
-        }
     }
 }
 */
 
+//// ST7735_WriteString(40, 10, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
 void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
  8000a56:	b082      	sub	sp, #8
  8000a58:	b580      	push	{r7, lr}

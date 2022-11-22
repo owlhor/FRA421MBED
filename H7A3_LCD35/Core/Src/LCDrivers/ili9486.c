@@ -9,6 +9,7 @@
 #include "bmp.h"
 #include "ili9486.h"
 #include "Fonts/fonts.h"
+#include <stdio.h>
 
 /* Lcd */
 void     ili9486_Init(void);
@@ -28,7 +29,7 @@ void     ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
 void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
-void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char chr,sFONT fonto, uint16_t RGB_Coder);
+void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
 /* Touchscreen */
 void     ili9486_ts_Init(uint16_t DeviceAddr);
 uint8_t  ili9486_ts_DetectTouch(uint16_t DeviceAddr);
@@ -511,14 +512,23 @@ void ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 }
 
 /* FontWrite cat cat by owlhor*/
-void ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char chr,sFONT fonto, uint16_t RGB_Coder){
-	uint8_t i,j = 0; //// ij is sizeof char table, b is start pos at fonttable & data in font
-	//uint32_t b;
-
-	union {
-		uint8_t b8[4];
-		uint32_t b32;
-	}bu32;
+/**
+  * @brief  Write 1 char on display
+  * @param  Xpo:   Start X position in the LCD
+  * @param  Ypo:   Start Y position in the LCD
+  * @param  chr:  Display Char
+  * @param  fonto: font select (from font.h)
+  * @param  RGB_Coder: Text Color
+  * @param  RGB_bg: Char background Color
+  * @retval None
+  */
+void ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg){
+	/*ex
+	 * ili9486_WriteChar(140, 50, "E", Font24, cl_ORANGE, cl_BLACK);
+	 * */
+	//// stored font data
+	uint32_t hop32 = 0;
+	uint8_t b8[4] = {0};
 	/* _ X+ ------>
 	 * Y+
 	 * |
@@ -535,32 +545,74 @@ void ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char chr,sFONT fonto, uint16_
 	 * c = i * rowbox -> jump to next column in next i rowloop
 	 * k => jump to next row in that column
 	 * */
+
 	//// find num of bit rows per jump in fonts.c
-	int rowbox = roundf((float)(fonto.Width) / 8);
-	//int rowbox = (fonto.Width / 8) + 1;
+	int rowbox = ceilf((float)(fonto.Width) / 8);
+
+	//// choose MSB check pos for each font size
+	//// 0x80 , 0x8000 , 0x 800000
+	uint32_t clif_msb = 0x80 << (8 * (rowbox - 1));
+
+	//// -32 to offset sync ASCII Table start " " at 32
 	//// double for loop as one char table
-	for(i = 0; i < fonto.Height; i++){
-		//// -32 to offset sync ASCII Table start " " at 32
+	for(int i = 0; i < fonto.Height; i++){
 
-		//// Load data 1 column per loop
-		//b = fonto.table[((chr - 31) * fonto.Height * rowbox)+ (i*rowbox)];
-
+		hop32 = 0;
 		for(int k = 0;k < rowbox;k++){
-			bu32.b8[k] = fonto.table[((chr - 32) * fonto.Height * rowbox)+ (i*rowbox) + k];
-//			b = (b << (int)(8 * k)) & (fonto.table[((chr - 32) * fonto.Height * rowbox) + (i*rowbox) + k]);
-
+			b8[k] = fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k];
+			hop32 = (hop32 << 8) + b8[k];
 		}
 
-
-		for(j = 0; j < fonto.Width; j++){
+		for(int j = 0; j < fonto.Width; j++){
 			//// if valuein fonttable is 1
-			//// (b << j) & 0x80 -> seek at MSB First
-			if((bu32.b32 << j) & 0x8000){
-			//if((b << j) & 0x8000){
-				ili9486_WritePixel(j + Xpo, Ypo + i, RGB_Coder);
+			if((hop32 << j) & clif_msb){ // buu32.b32
+				ili9486_WritePixel(Xpo + j, Ypo + i, RGB_Coder);
+			}
+			//// for background write
+			else{
+				ili9486_WritePixel(Xpo + j, Ypo + i, RGB_bg);
 			}
 
 		}
+	}
+}
+
+/**
+  * @brief  Write text string on display
+  * @param  Xpo:   Start X position in the LCD
+  * @param  Ypo:   Start Y position in the LCD
+  * @param  Strr:  Display Text
+  * @param  fonto: font select (from font.h)
+  * @param  RGB_Coder: Text Color
+  * @param  RGB_bg: Text background Color
+  * @retval None
+  */
+void ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg){
+	/*ex
+	 * ili9486_WriteString(20, 300, "Helios xTerra", Font20, cl_WHITE, cl_BLACK);
+	 * */
+	uint16_t ili_heigh = ili9486_GetLcdPixelHeight();
+	uint16_t ili_width = ili9486_GetLcdPixelWidth();
+	while(*strr){
+	//// Check screen overflow / new line
+		if(Xpo + fonto.Width >= ili_width){
+			Xpo = 0;
+			Ypo += fonto.Height;
+
+			if(Ypo + fonto.Height >= ili_heigh){
+				break;
+			}
+
+			if(*strr == ' ') {
+				// skip spaces in the beginning of the new line
+				strr++;
+				continue;
+			}
+		}
+		//ST7735_WriteChar(x, y, *str, font, color, bgcolor);
+		ili9486_WriteChar(Xpo, Ypo, strr, fonto, RGB_Coder, RGB_bg);
+		Xpo += fonto.Width;
+		strr++;
 	}
 }
 

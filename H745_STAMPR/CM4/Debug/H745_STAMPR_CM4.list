@@ -155,6 +155,7 @@ void DS3231_Read(I2C_HandleTypeDef *hi2c){
 08100340 <EXIN_RTC_SYNC>:
 
 
+//// Sync timevalue when boot(in case Vbat is not powered)
 void EXIN_RTC_SYNC(I2C_HandleTypeDef *hi2c, RTC_HandleTypeDef *hrtc){
  8100340:	b580      	push	{r7, lr}
  8100342:	b088      	sub	sp, #32

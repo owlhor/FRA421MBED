@@ -64,6 +64,8 @@ uint16_t chpos;
 uint32_t bfpos = 0;
 uint32_t hop = 0;
 uint32_t cliff = 0;
+
+char txtbuf[20] = {0};
 ////// for fontwrite test
 
 
@@ -83,6 +85,7 @@ static void MX_TIM17_Init(void);
 uint64_t micros();
 void ili_screen_1();
 void ili_fonttest(uint16_t Xpo, uint16_t Ypo, char *chr, sFONT fonto, uint16_t RGB_Coder);
+void ili_texttest(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -133,9 +136,10 @@ int main(void)
   baaa[0] = ili9486_GetLcdPixelWidth();
   baaa[1] = ili9486_GetLcdPixelHeight();
   baaa[2] = ili9486_ReadID();
-
+  ili9486_FillRect(0, 0, 480, 320, 0x0000);
   //// force start testfont screen 3
-  flag_blue = 3;
+
+  //flag_blue = 3;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,17 +175,11 @@ int main(void)
 	  			ili9486_WritePixel(210 + i, 80 + j, cl_GREEN);
 	  		  }
 
-//	  		  ili9486_WriteChar(20, 20, "R", Font8, cl_WHITE);
-//	  		  ili9486_WriteChar(50, 20, "R", Font12, cl_WHITE);
-//	  		  ili9486_WriteChar(80, 20, "R", Font16, cl_WHITE);
-//	  		  ili9486_WriteChar(110, 20, "R", Font20, cl_WHITE);
-//	  		  ili9486_WriteChar(140, 20, "R", Font24, cl_WHITE);
-
-	  		  ili9486_WriteChar(20, 50, "E", Font8, cl_WHITE);
-			  ili9486_WriteChar(50, 50, "E", Font12, cl_WHITE);
-			  ili9486_WriteChar(80, 50, "E", Font16, cl_WHITE);
-			  ili9486_WriteChar(110, 50, "E", Font20, cl_WHITE);
-			  ili9486_WriteChar(140, 50, "E", Font24, cl_WHITE);
+	  		  ili9486_WriteChar(20, 50, "E", Font8, cl_RED, cl_GREEN);
+			  ili9486_WriteChar(50, 50, "E", Font12, cl_WHITE, cl_BLACK);
+			  ili9486_WriteChar(80, 50, "E", Font16, cl_BLUE, cl_CYAN);
+			  ili9486_WriteChar(110, 50, "E", Font20, cl_WHITE, cl_RED);
+			  ili9486_WriteChar(140, 50, "E", Font24, cl_ORANGE, cl_BLACK);
 
 			  //ili9486_FillRect(198, 30, 2, 30, cl_YELLOW);
 			  ili9486_DrawVLine(cl_YELLOW, 200, 40, 24);
@@ -196,6 +194,17 @@ int main(void)
 			  ili_fonttest(325, 40, "B", Font12, cl_WHITE);
 			  ili_fonttest(350, 40, "C", Font16, cl_WHITE);
 			  ili_fonttest(375, 40, "D", Font20, cl_WHITE);
+
+			  ili9486_WriteString(20, 300, "KaleAR Terra", Font20, cl_WHITE, cl_BLACK);
+			  ili_texttest(200, 200, "Helios Terra Renai Kaliber Barx Maxon 129035"
+					  " __ --== + &&6.. [ ggg ]??? Rhivalia DIAR Barvarrian"
+					  " vicar nexus iICCTVS \ / %%% $ *(!@#$%^&*)_{} "
+					  , Font20, cl_GREEN, cl_BLACK);
+			  char* aa = "A";
+			  txtbuf[14] = *aa;
+
+			  ili_fonttest(400, 30, aa, Font24, cl_WHITE); // A  <- output
+			  ili_fonttest(420, 30, *aa, Font24, cl_WHITE); // N  <- output
 
 	  		  flag_blue = 0; // comment this to forever loop
 	  	  }
@@ -213,7 +222,7 @@ int main(void)
 			  ff = 0;
 		  }
 		  int ratte = 1;
-		  int sizo = 40;
+		  int sizo = 30;
 		  int offs = 140;
 		  static uint16_t xsh = 0;
 		  ili9486_FillRect(xsh, offs, ratte ,sizo, 0xF792);
@@ -512,28 +521,56 @@ void ili_fonttest(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RG
 
 		hop = 0;
 		for(int k = 0; k < rowbox; k++){
-			//// how to insert in union
+			//// Works
 			buu32.b8[k] = fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k];
-//			buu32.b32 = (buu32.b32 << (int)(8 * k)) | (fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k]);
 			hop = (hop << 8) + buu32.b8[k];
 			//HAL_Delay(30);
+			//// how to insert in union
+			//buu32.b8[rowbox - k] = fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k];
 		}
 
-		/////// note: 22/11/65
-		//// search from b8[0],b8[1],... solve little font loss
-
 		for(int j = 0; j < fonto.Width; j++){
-
+			////Works
 			if((hop << j) & cliff){ // buu32.b32
+
+			//if((buu32.b32 << j) & cliff){ //
 				ili9486_WritePixel(Xpo + j, Ypo + i, RGB_Coder);
 			}
-
-
 
 		}
 	}
 }
 
+void ili_texttest(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg){
+
+	uint16_t ili_heigh = ili9486_GetLcdPixelHeight();
+	uint16_t ili_width = ili9486_GetLcdPixelWidth();
+
+	while(*strr){
+
+	//// Check screen overflow / new line
+		if(Xpo + fonto.Width >= ili_width){
+			Xpo = 0;
+			Ypo += fonto.Height;
+
+			if(Ypo + fonto.Height >= ili_heigh){
+				break;
+			}
+
+			if(*strr == ' ') {
+				// skip spaces in the beginning of the new line
+				strr++;
+				continue;
+			}
+		}
+		//ST7735_WriteChar(x, y, *str, font, color, bgcolor);
+		static int nummm = 0;
+		txtbuf[nummm] = *strr;
+		ili9486_WriteChar(Xpo, Ypo, strr, fonto, RGB_Coder, RGB_bg);
+		Xpo += fonto.Width;
+		strr++; nummm++;
+	}
+}
 
 uint64_t micros()
 {return _micros + htim17.Instance->CNT;}
