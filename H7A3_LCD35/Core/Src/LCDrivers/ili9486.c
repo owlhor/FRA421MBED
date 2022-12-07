@@ -30,6 +30,7 @@ void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint
 void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
+void 	 ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
 /* Touchscreen */
 void     ili9486_ts_Init(uint16_t DeviceAddr);
 uint8_t  ili9486_ts_DetectTouch(uint16_t DeviceAddr);
@@ -54,6 +55,8 @@ LCD_DrvTypeDef   ili9486_drv =
   ili9486_FillRect,
   ili9486_ReadRGBImage,
   ili9486_Scroll,
+  ili9486_WriteChar,
+  ili9486_WriteString,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;

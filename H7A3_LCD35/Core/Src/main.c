@@ -130,15 +130,15 @@ int main(void)
   ili9486_Init();
   ili9486_DisplayOn();
 
-  BSP_LCD_Init();
-  BSP_LCD_DisplayOn();
+  //BSP_LCD_Init();
+  //BSP_LCD_DisplayOn();
 
   baaa[0] = ili9486_GetLcdPixelWidth();
   baaa[1] = ili9486_GetLcdPixelHeight();
   baaa[2] = ili9486_ReadID();
   ili9486_FillRect(0, 0, 480, 320, 0x0000);
-  //// force start testfont screen 3
 
+  //// force start testfont screen 3
   //flag_blue = 3;
   /* USER CODE END 2 */
 
