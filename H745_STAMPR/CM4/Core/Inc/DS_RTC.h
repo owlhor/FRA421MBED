@@ -19,11 +19,11 @@
 typedef union _DS3231_RG_Strc{
 	struct DS3231RG{
 		//// 00h
-		uint8_t sec: 8;
+		uint16_t sec: 8;
 		//// 01h
-		uint8_t min: 8;
+		uint16_t min: 8;
 		//// 02h
-		uint8_t hour: 7;
+		uint16_t hour: 7;
 		enum _HourMode1224{H24M, H12M
 		} HourMode: 1;
 		//// 03h
@@ -66,7 +66,7 @@ typedef union _DS3231_RG_Strc{
 		uint16_t day_A2: 6;
 		enum _DYDTA2{DT2, DY2
 		} DYDT_A2: 1;
-		uint8_t A2M4: 1;
+		uint16_t A2M4: 1;
 		//// 0Eh
 		uint16_t C_A1IE: 1;
 		uint16_t C_A2IE: 1;

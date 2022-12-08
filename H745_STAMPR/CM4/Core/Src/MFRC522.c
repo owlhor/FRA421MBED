@@ -10,7 +10,7 @@
 #ifdef MFRC522_enable
 
 //// Define this if not used NSS pin trig using Hardware output NSS signal / setting at ioc
-//#define MFRC522_SPI_HWOUT_NSS_DIS
+#define MFRC522_SPI_HWOUT_NSS_DIS
 
 //// include in .h instead
 //#include <stdlib.h>
@@ -28,7 +28,7 @@
  */
 void Write_MFRC522(u_char addr, u_char val) {
   //uint32_t rx_bits;
-	  u_char addr_bits = (((addr<<1) & 0x7E));
+	  u_char addr_bits = (((addr<<1) & 0x7E)); //// 8.1.2.3 read = 1/ write = 0[1] + addr[6] + 0[1]
   //u_char rx_bits;
 
 #ifdef MFRC522_SPI_HWOUT_NSS_DIS
@@ -69,7 +69,7 @@ void Write_MFRC522(u_char addr, u_char val) {
 u_char Read_MFRC522(u_char addr) {
   //uint32_t rx_bits;
   u_char rx_bits;
-  u_char addr_bits = (((addr<<1) & 0x7E) | 0x80);
+  u_char addr_bits = (((addr<<1) & 0x7E) | 0x80); ////  8.1.2.3  read = 1/ write = 0[1] + addr[6] + 0[1]
 
 #ifdef MFRC522_SPI_HWOUT_NSS_DIS
   // set the select line so we can start transferring
@@ -171,7 +171,7 @@ void MFRC522_Reset(void)
 }
 //--------------------------------------------------
 /*
- * Function Nameï¼šInitMFRC522
+ * Function Name: InitMFRC522
  * Description: Initialize RC522
  * Input: None
  * Return value: None
@@ -200,7 +200,8 @@ void MFRC522_Init(void)
 /*
  * Function Name: MFRC522_Request
  * Description: Find cards, read the card type number
- * Input parameters: reqMode - find cards way
+ * Input parameters:
+ *   reqMode - find cards way
  *   TagType - Return Card Type
  *    0x4400 = Mifare_UltraLight
  *    0x0400 = Mifare_One(S50)
@@ -598,11 +599,59 @@ void MFRC522_StopCrypto1(void) {
 	ClearBitMask(Status2Reg, 0x08); // Status2Reg[7..0] bits are: TempSensClear I2CForceHS reserved reserved   MFCrypto1On ModemState[2:0]
 } // End PCD_StopCrypto1()
 
-////------------------------------------
+////------------owl_hor-------owl_hor---------owl_hor----------
 void MFRC522_HardResetSet(void){
 	HAL_GPIO_WritePin(RC522_Rst_GPIO_Port, RC522_Rst_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(RC522_Rst_GPIO_Port, RC522_Rst_Pin, GPIO_PIN_SET);
+}
+
+uint8_t FIFOBuffex522[75]; //// Read FIFO buffer test
+void MFRC522_SelfTest(void){
+	/*  16.1.1 Self Test
+	 *  1. Perform a soft reset.
+		2. Clear the internal buffer by writing 25 bytes of 00h and implement the Config command.
+		3. Enable the self test by writing 09h to the AutoTestReg register.
+		4. Write 00h to the FIFO buffer.
+		5. Start the self test with the CalcCRC command.
+		6. The self test is initiated.
+		7. When the self test has completed, the FIFO buffer contains the following 64 bytes:
+		FIFO buffer byte values for MFRC522 version 2.0:
+			00h, EBh, 66h, BAh, 57h, BFh, 23h, 95h,
+			D0h, E3h, 0Dh, 3Dh, 27h, 89h, 5Ch, DEh,
+			9Dh, 3Bh, A7h, 00h, 21h, 5Bh, 89h, 82h,
+			51h, 3Ah, EBh, 02h, 0Ch, A5h, 00h, 49h,
+			7Ch, 84h, 4Dh, B3h, CCh, D2h, 1Bh, 81h,
+			5Dh, 48h, 76h, D5h, 71h, 061h, 21h, A9h,
+			86h, 96h, 83h, 38h, CFh, 9Dh, 5Bh, 6Dh,
+			DCh, 15h, BAh, 3Eh, 7Dh, 95h, 03Bh, 2Fh
+	 * */
+	//// 1. Soft reset -> send 1111 to 01h
+	Write_MFRC522(CommandReg, PCD_RESETPHASE);
+
+	//// 2. Write 00h to FIFO 25x times
+	for(int i = 0;i < 25; i++){
+		//Write_MFRC522(FIFODataReg, Reserved00); // use reserved bc it equals to 00h
+	}
+	//// 3. write 09h to AutoTest
+	Write_MFRC522(AutoTestReg, PCD_SELFTSTEN);
+
+	//// 4. Write 00h to the FIFO buffer again
+	Write_MFRC522(FIFODataReg, Reserved00);
+
+	FIFOBuffex522[0] = Read_MFRC522(FIFOLevelReg); //// FIFO Check
+	//// 5. CalcCRC -> Write 0011 to 01h
+	Write_MFRC522(CommandReg, PCD_CALCCRC);
+
+	//// 6. Self test enable, wait for calculation/ must have!!!
+	HAL_Delay(1);
+
+	FIFOBuffex522[1] = Read_MFRC522(FIFOLevelReg);  //// FIFO Check
+
+	//// 7. Read 64 buffer FIFO
+	for(uint j = 2;j < 73; j++){
+	FIFOBuffex522[j] = Read_MFRC522(FIFODataReg);
+	}
 }
 
 #endif

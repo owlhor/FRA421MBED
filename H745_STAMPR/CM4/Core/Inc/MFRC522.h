@@ -42,6 +42,8 @@ extern SPI_HandleTypeDef MFRC522_SPI_PORT;
 #define PCD_RESETPHASE        0x0F               //Reset
 #define PCD_CALCCRC           0x03               //CRC Calculate
 
+#define PCD_SELFTSTEN		  0x09				 //Enable self test
+
 // Mifare_One card command word
 #define PICC_REQIDL          0x26               // find the antenna area does not enter hibernation
 #define PICC_REQALL          0x52               // find all the cards antenna area
@@ -153,7 +155,9 @@ u_char MFRC522_Read(u_char, u_char*);
 u_char MFRC522_Write(u_char, u_char*);
 void MFRC522_Halt();
 void MFRC522_StopCrypto1(void);
+
 void MFRC522_HardResetSet(void);
+void MFRC522_SelfTest(void);
 
 #endif /*MFRC522_enable*/
 
