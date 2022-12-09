@@ -25,7 +25,7 @@
 #include "../../../Common/Src/SRAM4.h"
 #include "DS_RTC.h"
 #include "MFRC522.h"
-
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -78,6 +78,8 @@ SPI_HandleTypeDef hspi4;
 TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
 uint64_t _micros = 0;
@@ -87,6 +89,7 @@ uint32_t timestamp_two = 0;
 RTC_TimeTypeDef NowTime;
 RTC_DateTypeDef NowDate;
 
+char txtUARTBF[100] = {0};
 ////-------- MFRC522 --------------
 uint8_t bufferMM[8] = {0};
 uint8_t rc522_version;
@@ -118,9 +121,11 @@ static void MX_GPIO_Init(void);
 static void MX_TIM17_Init(void);
 static void MX_RTC_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_DMA_Init(void);
 static void MX_SPI4_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void printUART(char* texts, uint8_t timeoutc);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -171,17 +176,38 @@ int main(void)
   MX_TIM17_Init();
   MX_RTC_Init();
   MX_I2C2_Init();
+  MX_DMA_Init();
   MX_SPI4_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   //HAL_TIM_Base_Start_IT(&htim17);
 
   //// Start sync EXIN RTC
+  DS3231_Read(&hi2c2);
   EXIN_RTC_SYNC(&hi2c2,&hrtc);
   MFRC522_HardResetSet();
   MFRC522_Init();
   //// MFRC522 version 2.0 software version is: 92h
   rc522_version = Read_MFRC522(VersionReg);
+
+#define Huart3
+#ifdef Huart3
+  HAL_RTC_GetTime(&hrtc, &NowTime, RTC_FORMAT_BCD);
+  HAL_RTC_GetDate(&hrtc, &NowDate, RTC_FORMAT_BCD);
+
+  char temp[]="----------------- H745_STAMPR_CM4 --------------------\r\n";
+  HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),10); // strlen = length of str -> config length of data
+  char temp2[100];
+  sprintf(temp2, "Date: %x/%x/%x  Time: %x:%x:%x \r\n",
+		  NowDate.Date, NowDate.Month, NowDate.Year,
+		  NowTime.Hours,NowTime.Minutes, NowTime.Seconds);
+  HAL_UART_Transmit(&huart3, (uint8_t*)temp2, strlen(temp2),30);
+
+  status_522 = Read_MFRC522(VersionReg);
+  sprintf(txtUARTBF, "Version  %xh \r\n",status_522);
+  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,7 +224,6 @@ int main(void)
 		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
 		  DS3231_Read(&hi2c2);
-
 		  if(HAL_HSEM_Take(1, 1) == HAL_OK){
 		  //read RTC NEED TO READ BOTH IN OTHER
 		  HAL_RTC_GetTime(&hrtc, &NowTime, RTC_FORMAT_BCD);
@@ -210,7 +235,7 @@ int main(void)
 		  	  }
 	  }
 
-	  if(HAL_GetTick() - timestamp_two >= 2000 && flag_one == 4){
+	  if(HAL_GetTick() - timestamp_two >= 2000){
 		  timestamp_two = HAL_GetTick();
 //		  //// test-------------------------
 //		  uint8_t addr00[6] = {0x01,0x09,0x0A,0x0D,0x11,0x13};
@@ -224,19 +249,21 @@ int main(void)
 //		  HAL_Delay(500);
 //		  //// test-------------------------
 
-//		  for (int i = 0; i < 16; i++) {
-//			  cardstr[i] = 0;
-//		  }
-		  //status_522 = 0;
-		  // Find cards
-		  stcnt[0]++;
 
-		  //status_522 = MFRC522_Request(PICC_REQIDL, &cardstr[0]);
+		  // Find cards
+		  status_5221 = MFRC522_Request(PICC_REQIDL, &bufferMM[1]);//bufferMM
+		  //bufferMM[3] = Read_MFRC522(FIFODataReg);
 		  status_522 = MFRC522_Anticoll(&cardstr[0]);
+
+		  sprintf(txtUARTBF, "Find Cards %x  %x  %x  %x \r\n",status_5221 ,status_522, bufferMM[1], bufferMM[3]);
+		  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
+
 		  if(status_522 == MI_OK) {
+			  printUART("Anticoll OK \r\n", 10);
 			  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 			  result++;
-			  //sprintf(str2,"UID:%x %x %x %x", cardstr[0], cardstr[1], cardstr[2], cardstr[3]);
+			  sprintf(txtUARTBF,"UID: %x %x %x %x \r\n", cardstr[0], cardstr[1], cardstr[2], cardstr[3]);
+			  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 			  UID[0] = cardstr[0];
 			  UID[1] = cardstr[1];
 			  UID[2] = cardstr[2];
@@ -249,7 +276,9 @@ int main(void)
 	  } //// timestamp_two loop
 
 	  if(flag_one == 3){
+
 		  MFRC522_SelfTest();
+		  printUART("RC522 Self test\r\n", 10);
 		  flag_one = 0;
 	  }
   }
@@ -509,7 +538,7 @@ static void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -553,6 +582,25 @@ void MX_USART3_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -565,6 +613,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, RC522_Rst_Pin|RC522_SPI4_NSS_Pin, GPIO_PIN_SET);
@@ -602,10 +651,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void printUART(char* texts, uint8_t timeoutc){
+	sprintf(txtUARTBF, texts);
+	HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),timeoutc);
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
-		flag_one = 3;
-		//MFRC522_SelfTest();
+		flag_one = 3;   ////MFRC522_SelfTest();
+
 		}
 }
 

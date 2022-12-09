@@ -14,6 +14,7 @@
 
 DS3231_RG_Strc ERTC_lg;
 
+
 void DS3231_Read(I2C_HandleTypeDef *hi2c){
 	/* Check by use "ERTC_lg" in live expression
 	 * ex. S3231_Read(&hi2c2);
@@ -46,6 +47,8 @@ void EXIN_RTC_SYNC(I2C_HandleTypeDef *hi2c, RTC_HandleTypeDef *hrtc){
 	HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT_BCD);
 }
 
-
+//void TimeCVHexToInt(){
+//
+//}
 
 #endif

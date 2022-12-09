@@ -93,8 +93,21 @@ typedef union _DS3231_RG_Strc{
 	uint8_t D8[19];
 }DS3231_RG_Strc;
 
+
+typedef struct _TimeINT{
+	uint8_t sec:4;
+	uint8_t min:4;
+	uint8_t hour:4;
+	uint8_t day:4;
+	uint8_t mon:4;
+	uint8_t year:4;
+
+}TimeINT;
+
+
 void DS3231_Read(I2C_HandleTypeDef *hi2c);
 void EXIN_RTC_SYNC(I2C_HandleTypeDef *hi2c, RTC_HandleTypeDef *hrtc);
+//void TimeCVHexToInt();
 
 #endif
 
