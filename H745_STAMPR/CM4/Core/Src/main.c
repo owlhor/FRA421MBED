@@ -93,7 +93,7 @@ char txtUARTBF[100] = {0};
 ////-------- MFRC522 --------------
 uint8_t bufferMM[8] = {0};
 uint8_t rc522_version;
-u_char status_5221;
+uint16_t status_5221;
 uint8_t flag_one = 0;
 
 uint8_t stcnt[8] = {0};
@@ -123,7 +123,6 @@ static void MX_RTC_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI4_Init(void);
-static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void printUART(char* texts, uint8_t timeoutc);
 /* USER CODE END PFP */
@@ -178,7 +177,6 @@ int main(void)
   MX_I2C2_Init();
   MX_DMA_Init();
   MX_SPI4_Init();
-  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   //HAL_TIM_Base_Start_IT(&htim17);
@@ -237,7 +235,7 @@ int main(void)
 
 	  if(HAL_GetTick() - timestamp_two >= 2000){
 		  timestamp_two = HAL_GetTick();
-//		  //// test-------------------------
+//		  //// SPI test-------------------------
 //		  uint8_t addr00[6] = {0x01,0x09,0x0A,0x0D,0x11,0x13};
 //		  for(int i = 2;i < 5;i++){
 //		  //// NSS pin trig using Hardware output NSS signal / setting at ioc
@@ -247,7 +245,7 @@ int main(void)
 //		  //HAL_GPIO_WritePin(RC522_CS_GPIO_Port, RC522_CS_Pin, GPIO_PIN_SET);
 //		  }
 //		  HAL_Delay(500);
-//		  //// test-------------------------
+//		  //// SPI test-------------------------
 
 
 		  // Find cards
@@ -538,7 +536,7 @@ static void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */

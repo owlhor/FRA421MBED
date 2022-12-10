@@ -202,7 +202,7 @@ void MFRC522_Init(void)
  * Description: Find cards, read the card type number
  * Input parameters:
  *   reqMode - find cards way
- *   TagType - Return Card Type
+ *   TagType - Return Card Type2
  *    0x4400 = Mifare_UltraLight
  *    0x0400 = Mifare_One(S50)
  *    0x0200 = Mifare_One(S70)

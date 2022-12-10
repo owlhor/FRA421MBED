@@ -24,7 +24,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../../Common/Src/SRAM4.h"
-#include "../../Drivers/LCDrivers/lcd/ili9486/ili9486.h"
+//#include "../../Drivers/LCDrivers/lcd/ili9486/ili9486.h"
+#include "LCDrivers/Fonts/fonts.h"
+#include "LCDrivers/ili9486.h"
+#include "testimg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,17 +79,22 @@ DMA_HandleTypeDef hdma_usart3_tx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
+char txtdispBF[120] = {0};
+RTC_TimeTypeDef NowTim7;
+RTC_DateTypeDef NowDat7;
 
+uint32_t timestamp_one = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ETH_Init(void);
+static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_DMA_Init(void);
 /* USER CODE BEGIN PFP */
-
+void ili_scr_1();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -152,17 +160,42 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ETH_Init();
+  MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_DMA_Init();
   MX_LIBJPEG_Init();
   /* USER CODE BEGIN 2 */
 
+  	ili9486_Init();
+    ili9486_DisplayOn();
+    ili9486_FillRect(0, 0, 480, 320, cl_BLACK);
+    ili_scr_1();
+    ili9486_WriteString(20, 20, "-----------STAMPR------------", Font20, cl_WHITE, cl_BLACK);
+    ili9486_WriteString(420, 20, "OWL_HOR", Font12, cl_BLUE, cl_BLACK);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	  if(HAL_GetTick() - timestamp_one >= 1000){
+	  		  timestamp_one = HAL_GetTick();
+	  		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+
+	  		//HAL_RTC_GetTime(&hrtc, &NowTim7, RTC_FORMAT_BCD);
+	  		//HAL_RTC_GetDate(&hrtc, &NowDat7, RTC_FORMAT_BCD);
+	  		NowDat7 = SRAM4->NowDates;
+	  		NowTim7 = SRAM4->NowTimes;
+
+	  		sprintf(txtdispBF, "Time: %02x:%02x:%02x", // use %02 to fill 0 front of 1 digit
+	  				  NowTim7.Hours, NowTim7.Minutes, NowTim7.Seconds);
+	  		ili9486_WriteString(100, 60, txtdispBF, Font24, cl_YELLOW, cl_BLACK);
+	  		sprintf(txtdispBF, "Date: %02x/%02x/%02x",
+	  			  				  NowDat7.Date, NowDat7.Month, NowDat7.Year);
+	  		HAL_UART_Transmit(&huart3, (uint8_t*)txtdispBF, strlen(txtdispBF),30);
+	  		ili9486_WriteString(100, 85, txtdispBF, Font24, cl_YELLOW, cl_BLACK);
+	  	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -358,7 +391,7 @@ void MX_RTC_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -455,6 +488,7 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -463,10 +497,30 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : LD3_Pin */
+  GPIO_InitStruct.Pin = LD3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD3_GPIO_Port, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
+void ili_scr_1(){
 
+	  ili9486_FillRect(0, 300, 80, 20, cl_RED); // Red
+	  ili9486_FillRect(80, 300, 80, 20, cl_GREEN); // Green RGB565
+	  ili9486_FillRect(160, 300, 80, 20, cl_BLUE); // Blue
+
+	  ili9486_FillRect(240, 300,  80, 20, cl_CYAN); // C0x07FF
+	  ili9486_FillRect(320, 300, 80, 20, cl_MAGENTA); // M 0xF81F
+	  ili9486_FillRect(400, 300, 80, 20, cl_YELLOW); // Y0xFFE0
+	  //ili9486_FillRect(390, 30, 70, 230, cl_BLACK); // K
+}
 /* USER CODE END 4 */
 
 /**

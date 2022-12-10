@@ -22,12 +22,10 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Common/Src \
+Core/Src/LCDrivers/Fonts \
+Core/Src/LCDrivers \
 Core/Src \
 Core/Startup \
-Drivers/LCDrivers/Fonts \
-Drivers/LCDrivers/lcd/ili9486 \
-Drivers/LCDrivers \
-Drivers/LCDrivers/stm32h7xx \
 Drivers/STM32H7xx_HAL_Driver \
 LIBJPEG/App \
 Middlewares/Third_Party/LibJPEG \

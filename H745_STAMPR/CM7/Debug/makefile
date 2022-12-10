@@ -12,11 +12,9 @@ RM := rm -rf
 -include Middlewares/Third_Party/LibJPEG/subdir.mk
 -include LIBJPEG/App/subdir.mk
 -include Drivers/STM32H7xx_HAL_Driver/subdir.mk
--include Drivers/LCDrivers/stm32h7xx/subdir.mk
--include Drivers/LCDrivers/lcd/ili9486/subdir.mk
--include Drivers/LCDrivers/Fonts/subdir.mk
--include Drivers/LCDrivers/subdir.mk
 -include Core/Startup/subdir.mk
+-include Core/Src/LCDrivers/Fonts/subdir.mk
+-include Core/Src/LCDrivers/subdir.mk
 -include Core/Src/subdir.mk
 -include Common/Src/subdir.mk
 -include objects.mk
