@@ -2,7 +2,7 @@
  * SRAM4.h
  *
  *  Created on: Nov 11, 2022
- *      Author: User
+ *      Author: owl_hor
  */
 
 #ifndef SRC_SRAM4_H_
@@ -14,11 +14,17 @@
 //// make S4 ram mem access for dual core to realize same struct
 //// write at .h here -> easy to edit for 2 cores
 
+/* HSEM 1 -> RTC
+ * HSEM 2 -> UID
+ * */
+
 typedef struct
 {
 	uint32_t realtime_val;
 	RTC_TimeTypeDef NowTimes;
 	RTC_DateTypeDef NowDates;
+	uint8_t flag_UID;
+	uint8_t UUID[10];
 	//uint32_t DATA[500];
 
 }SharedMem;

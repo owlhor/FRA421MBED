@@ -123,6 +123,7 @@ static void MX_RTC_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI4_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void printUART(char* texts, uint8_t timeoutc);
 /* USER CODE END PFP */
@@ -177,6 +178,7 @@ int main(void)
   MX_I2C2_Init();
   MX_DMA_Init();
   MX_SPI4_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   //HAL_TIM_Base_Start_IT(&htim17);
@@ -197,7 +199,7 @@ int main(void)
   char temp[]="----------------- H745_STAMPR_CM4 --------------------\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),10); // strlen = length of str -> config length of data
   char temp2[100];
-  sprintf(temp2, "Date: %x/%x/%x  Time: %x:%x:%x \r\n",
+  sprintf(temp2, "Date: %02X/%02X/%02X  Time: %02X:%02X:%02X \r\n",
 		  NowDate.Date, NowDate.Month, NowDate.Year,
 		  NowTime.Hours,NowTime.Minutes, NowTime.Seconds);
   HAL_UART_Transmit(&huart3, (uint8_t*)temp2, strlen(temp2),30);
@@ -228,12 +230,11 @@ int main(void)
 		  HAL_RTC_GetDate(&hrtc, &NowDate, RTC_FORMAT_BCD);
 		  SRAM4->NowTimes = NowTime;
 		  SRAM4->NowDates = NowDate;
-
 		  HAL_HSEM_Release(1, 1);
 		  	  }
 	  }
 
-	  if(HAL_GetTick() - timestamp_two >= 2000){
+	  if(HAL_GetTick() - timestamp_two >= 1500){
 		  timestamp_two = HAL_GetTick();
 //		  //// SPI test-------------------------
 //		  uint8_t addr00[6] = {0x01,0x09,0x0A,0x0D,0x11,0x13};
@@ -260,13 +261,24 @@ int main(void)
 			  printUART("Anticoll OK \r\n", 10);
 			  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 			  result++;
-			  sprintf(txtUARTBF,"UID: %x %x %x %x \r\n", cardstr[0], cardstr[1], cardstr[2], cardstr[3]);
+			  sprintf(txtUARTBF,"UID: %02X %02X %02X %02X \r\n", cardstr[0], cardstr[1], cardstr[2], cardstr[3]);
 			  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 			  UID[0] = cardstr[0];
 			  UID[1] = cardstr[1];
 			  UID[2] = cardstr[2];
 			  UID[3] = cardstr[3];
 			  UID[4] = cardstr[4];
+
+			  //// send read ID to CM7
+			  if(HAL_HSEM_Take(2, 1) == HAL_OK){
+				  SRAM4->UUID[0] = UID[0];
+				  SRAM4->UUID[1] = UID[1];
+				  SRAM4->UUID[2] = UID[2];
+				  SRAM4->UUID[3] = UID[3];
+				  SRAM4->UUID[4] = UID[4];
+				  SRAM4->flag_UID = 1;
+			  	  HAL_HSEM_Release(2, 1);
+			  	}
 		  }else{
 			  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
 		  }
@@ -536,7 +548,7 @@ static void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */

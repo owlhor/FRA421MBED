@@ -25,6 +25,7 @@ Common/Src \
 Core/Src/LCDrivers/Fonts \
 Core/Src/LCDrivers \
 Core/Src \
+Core/Src/personalINFO \
 Core/Startup \
 Drivers/STM32H7xx_HAL_Driver \
 LIBJPEG/App \

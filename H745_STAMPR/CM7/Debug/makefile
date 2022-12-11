@@ -13,6 +13,7 @@ RM := rm -rf
 -include LIBJPEG/App/subdir.mk
 -include Drivers/STM32H7xx_HAL_Driver/subdir.mk
 -include Core/Startup/subdir.mk
+-include Core/Src/personalINFO/subdir.mk
 -include Core/Src/LCDrivers/Fonts/subdir.mk
 -include Core/Src/LCDrivers/subdir.mk
 -include Core/Src/subdir.mk

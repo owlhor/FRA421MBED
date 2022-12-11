@@ -28,6 +28,8 @@
 #include "LCDrivers/Fonts/fonts.h"
 #include "LCDrivers/ili9486.h"
 #include "testimg.h"
+#include "personalINFO/PersonaINFO.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +43,8 @@
 #ifndef HSEM_ID_0
 #define HSEM_ID_0 (0U) /* HW semaphore 0*/
 #endif
+
+#define k_tim_show_milli 5000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -84,13 +88,16 @@ RTC_TimeTypeDef NowTim7;
 RTC_DateTypeDef NowDat7;
 
 uint32_t timestamp_one = 0;
+uint32_t timestamp_grandis[3] = {0};
+
+static enum{st_lobby, st_search, st_show, st_waitend} GranDiSTATE = st_lobby;
+int8_t px_ID_match = -1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ETH_Init(void);
-static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_DMA_Init(void);
 /* USER CODE BEGIN PFP */
@@ -160,18 +167,24 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ETH_Init();
-  MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_DMA_Init();
   MX_LIBJPEG_Init();
   /* USER CODE BEGIN 2 */
 
+  	SRAM4-> flag_UID = 0;
+
   	ili9486_Init();
     ili9486_DisplayOn();
-    ili9486_FillRect(0, 0, 480, 320, cl_BLACK);
+
     ili_scr_1();
-    ili9486_WriteString(20, 20, "-----------STAMPR------------", Font20, cl_WHITE, cl_BLACK);
-    ili9486_WriteString(420, 20, "OWL_HOR", Font12, cl_BLUE, cl_BLACK);
+    //ili9486_WriteString(20, 20, " > STAMPR ----->>>-----", Font20, cl_WHITE, cl_BLACK);
+    //ili9486_WriteString(420, 270, " OWL_HOR ", Font16, cl_BLUE, cl_BLACK);
+    ili9486_FillRect(0, 0, 480, 35, cl_BLUE);
+    ili9486_WriteStringNoBG(10, 10, " > STAMPR ----->>>-----", Font20, cl_WHITE);
+    //ili9486_WriteStringNoBG(400, 15, " OWL_HOR ", Font12, cl_WHITE);
+    ili9486_DrawRGBImage(140, 120, 128, 128, (uint16_t*)test_img_128x128);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -179,23 +192,153 @@ Error_Handler();
   while (1)
   {
 
-	  if(HAL_GetTick() - timestamp_one >= 1000){
+	  //// Timer Manager
+	  if(HAL_GetTick() - timestamp_one >= 500){
 	  		  timestamp_one = HAL_GetTick();
 	  		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 
-	  		//HAL_RTC_GetTime(&hrtc, &NowTim7, RTC_FORMAT_BCD);
-	  		//HAL_RTC_GetDate(&hrtc, &NowDat7, RTC_FORMAT_BCD);
 	  		NowDat7 = SRAM4->NowDates;
 	  		NowTim7 = SRAM4->NowTimes;
 
-	  		sprintf(txtdispBF, "Time: %02x:%02x:%02x", // use %02 to fill 0 front of 1 digit
+	  		sprintf(txtdispBF, "%02X:%02X:%02X", // use %02 to fill 0 front of 1 digit
 	  				  NowTim7.Hours, NowTim7.Minutes, NowTim7.Seconds);
-	  		ili9486_WriteString(100, 60, txtdispBF, Font24, cl_YELLOW, cl_BLACK);
-	  		sprintf(txtdispBF, "Date: %02x/%02x/%02x",
+	  		ili9486_WriteString(365, 40, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
+
+	  		sprintf(txtdispBF, "%02x/%02x/%02x",
 	  			  				  NowDat7.Date, NowDat7.Month, NowDat7.Year);
-	  		HAL_UART_Transmit(&huart3, (uint8_t*)txtdispBF, strlen(txtdispBF),30);
-	  		ili9486_WriteString(100, 85, txtdispBF, Font24, cl_YELLOW, cl_BLACK);
+	  		ili9486_WriteString(365, 60, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
 	  	  }
+
+	  //// State Manager not displaying write order
+	  if(HAL_GetTick() - timestamp_grandis[0] >= 100){
+		  timestamp_grandis[0] = HAL_GetTick();
+
+		  switch (GranDiSTATE){
+		  default:
+		  case st_lobby:
+			  //// ------------------------------------------------------------------------------
+
+
+			  //if(HAL_HSEM_Take(2, 2) == HAL_OK){
+				  if ( SRAM4-> flag_UID == 1){
+
+					  //GranDiSTATE = st_show;
+					  GranDiSTATE = st_search;
+					  SRAM4-> flag_UID = 0;
+					  //timestamp_grandis[1] = HAL_GetTick();
+				  }
+			  	//  HAL_HSEM_Release(2, 2);
+			  	//}
+			  break;
+
+		  case st_search:
+
+			  //// ------------------------------------------------------------------------------
+			  //// search match ID before show everything in st_show
+			  //// if SD Card, call AllID in SD keep in buffer to search then call pic data if found
+			  /* 1 - call all ID in database / how to stored all of it for search
+			   * 2 - search from ID 1 to last
+			   * 3 - search from UID[0] if not match -> go to next ID
+			   *   - if not found any -> return n/a status and report no data in base
+			   *   - if found -> break and end the search/ return personna -> go to st_show
+			   * */
+#ifdef px_ID_search_datasss
+			  px_ID_match = -1; //// -1 means not found preferred
+			  //// Breadth-First-Search cat cat
+			  	 for(int y = 0;y <= PERSONA_LEN; y++){
+			  		 if (SRAM4->UUID[0] == px_person[y].USID[0]){
+			  			 if (SRAM4->UUID[1] == px_person[y].USID[1]){
+			  				if (SRAM4->UUID[2] == px_person[y].USID[2]){
+			  					if (SRAM4->UUID[3] == px_person[y].USID[3]){
+			  						px_ID_match = y;
+			  						break; //// end search
+			  					}// search layer 3
+			  				}// search layer 2
+			  			 }// search layer 1
+			  		 }// search layer 0
+
+			  	 }// for loop search
+#endif
+			  /// ---------------Finally-------------------------------
+			  GranDiSTATE = st_show;
+			  timestamp_grandis[1] = HAL_GetTick();
+
+			  break;
+
+		  case st_show:
+			  //// ------------------------------------------------------------------------------
+
+			  // ID Show----------------------------
+			  sprintf(txtdispBF,"Found ID");
+			  ili9486_WriteString(160, 100, txtdispBF, Font20, cl_ORANGE, cl_BLACK);
+
+			  sprintf(txtdispBF,"UID: %02X %02X %02X %02X",
+					 SRAM4->UUID[0],SRAM4->UUID[1],SRAM4->UUID[2],SRAM4->UUID[3]);
+			  ili9486_WriteString(160, 125, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
+			  // ID Show-----------------------------
+
+			  //// try using prottypo concept / hal handeltypedef hi2c; /
+			  ////// dummy only, it works
+			  if (SRAM4->UUID[0] == p1_owl.USID[0] &&
+				  SRAM4->UUID[1] == p1_owl.USID[1] &&
+				  SRAM4->UUID[2] == p1_owl.USID[2] &&
+				  SRAM4->UUID[3] == p1_owl.USID[3]){
+
+				  ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)p1_owl.pic);
+				  ili9486_WriteString(160, 150, p1_owl.Name, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 175, p1_owl.Surname, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 200, p1_owl.welcom_txt, Font16, cl_ORANGE, cl_BLACK);
+			  }
+#ifdef px_ID_search_datasss
+			  //// ---- show pic
+			  if(px_ID_match == -1){
+				  ////ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)p1_owl.pic);
+				  ili9486_WriteString(160, 160,"NO ID IN DATABASE", Font24, cl_RED, cl_BLACK);
+
+			  }else{
+				  ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)px_person[px_ID_match].pic);
+				  ili9486_WriteString(160, 150, px_person[px_ID_match].Name, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 175, px_person[px_ID_match].Surname, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 200, px_person[px_ID_match].welcom_txt, Font16, cl_ORANGE, cl_BLACK);
+			  }
+#endif
+			  GranDiSTATE = st_waitend;
+
+			  ////// Ending display and back to lobby------------------
+//			  if(HAL_GetTick() - timestamp_grandis[1] >= k_tim_show_milli){
+//				  GranDiSTATE = st_lobby;
+//				  // clear Display
+//				  ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
+//
+//				  //// clear UID
+//				  SRAM4->UUID[0] = 0;
+//				  SRAM4->UUID[1] = 0;
+//				  SRAM4->UUID[2] = 0;
+//				  SRAM4->UUID[3] = 0;
+//			  }
+
+			  break;
+
+		  case st_waitend:
+			  /* Using waitend to wait, if still in show -> CPU will write display continuously
+			   * */
+			  ////// Ending display and back to lobby------------------
+			  if(HAL_GetTick() - timestamp_grandis[1] >= k_tim_show_milli){
+				  GranDiSTATE = st_lobby;
+				  // clear Display
+				  ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
+
+				  //// clear UID
+				  SRAM4->UUID[0] = 0;
+				  SRAM4->UUID[1] = 0;
+				  SRAM4->UUID[2] = 0;
+				  SRAM4->UUID[3] = 0;
+			  }
+			  break;
+
+ 		  } // switch
+	  }// GrandState
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -391,7 +534,7 @@ void MX_RTC_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -512,10 +655,11 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void ili_scr_1(){
 
+	  ili9486_FillRect(0, 0, 480, 320, cl_BLACK);
+
 	  ili9486_FillRect(0, 300, 80, 20, cl_RED); // Red
 	  ili9486_FillRect(80, 300, 80, 20, cl_GREEN); // Green RGB565
 	  ili9486_FillRect(160, 300, 80, 20, cl_BLUE); // Blue
-
 	  ili9486_FillRect(240, 300,  80, 20, cl_CYAN); // C0x07FF
 	  ili9486_FillRect(320, 300, 80, 20, cl_MAGENTA); // M 0xF81F
 	  ili9486_FillRect(400, 300, 80, 20, cl_YELLOW); // Y0xFFE0
