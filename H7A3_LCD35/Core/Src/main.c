@@ -159,8 +159,8 @@ int main(void)
 	  }
 
 	  if(flag_blue == 4){
-		  BSP_LCD_Clear(0xff00);
-		  BSP_LCD_DrawRect(50, 50, 50, 50);
+		  //BSP_LCD_Clear(0xff00);
+		  //BSP_LCD_DrawRect(50, 50, 50, 50);
 		  flag_blue = 0;
 	  }
 

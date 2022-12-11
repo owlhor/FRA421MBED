@@ -60,3 +60,35 @@
 #define cl_ORANGE      0xFD20
 #define cl_GREENYELLOW 0xAFE5
 #define cl_PINK        0xF81F
+
+/*****************************************************************************/
+// Lcd Prototypo
+/*****************************************************************************/
+
+#include "Fonts/fonts.h"
+
+void     ili9486_Init(void);
+uint16_t ili9486_ReadID(void);
+void     ili9486_DisplayOn(void);
+void     ili9486_DisplayOff(void);
+void     ili9486_SetCursor(uint16_t Xpos, uint16_t Ypos);
+void     ili9486_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGB_Code);
+uint16_t ili9486_ReadPixel(uint16_t Xpos, uint16_t Ypos);
+void     ili9486_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
+void     ili9486_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
+void     ili9486_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
+void     ili9486_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
+uint16_t ili9486_GetLcdPixelWidth(void);
+uint16_t ili9486_GetLcdPixelHeight(void);
+void     ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
+void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
+void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
+void 	 ili9486_WriteCharNoBG(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder);
+void 	 ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
+void     ili9486_WriteStringNoBG(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder);
+/* Touchscreen */
+void     ili9486_ts_Init(uint16_t DeviceAddr);
+uint8_t  ili9486_ts_DetectTouch(uint16_t DeviceAddr);
+void     ili9486_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);

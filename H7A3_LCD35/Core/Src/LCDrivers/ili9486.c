@@ -12,29 +12,30 @@
 #include <stdio.h>
 
 /* Lcd */
-void     ili9486_Init(void);
-uint16_t ili9486_ReadID(void);
-void     ili9486_DisplayOn(void);
-void     ili9486_DisplayOff(void);
-void     ili9486_SetCursor(uint16_t Xpos, uint16_t Ypos);
-void     ili9486_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGB_Code);
-uint16_t ili9486_ReadPixel(uint16_t Xpos, uint16_t Ypos);
-void     ili9486_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
-void     ili9486_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
-void     ili9486_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
-void     ili9486_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
-uint16_t ili9486_GetLcdPixelWidth(void);
-uint16_t ili9486_GetLcdPixelHeight(void);
-void     ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
-void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
-void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
-void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
-void 	 ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
-/* Touchscreen */
-void     ili9486_ts_Init(uint16_t DeviceAddr);
-uint8_t  ili9486_ts_DetectTouch(uint16_t DeviceAddr);
-void     ili9486_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
+////// call in .h instead
+//void     ili9486_Init(void);
+//uint16_t ili9486_ReadID(void);
+//void     ili9486_DisplayOn(void);
+//void     ili9486_DisplayOff(void);
+//void     ili9486_SetCursor(uint16_t Xpos, uint16_t Ypos);
+//void     ili9486_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGB_Code);
+//uint16_t ili9486_ReadPixel(uint16_t Xpos, uint16_t Ypos);
+//void     ili9486_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
+//void     ili9486_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
+//void     ili9486_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length);
+//void     ili9486_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
+//uint16_t ili9486_GetLcdPixelWidth(void);
+//uint16_t ili9486_GetLcdPixelHeight(void);
+//void     ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
+//void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+//void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+//void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
+//void 	 ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
+//void 	 ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder, uint16_t RGB_bg);
+///* Touchscreen */
+//void     ili9486_ts_Init(uint16_t DeviceAddr);
+//uint8_t  ili9486_ts_DetectTouch(uint16_t DeviceAddr);
+//void     ili9486_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
 
 LCD_DrvTypeDef   ili9486_drv =
 {
@@ -56,7 +57,9 @@ LCD_DrvTypeDef   ili9486_drv =
   ili9486_ReadRGBImage,
   ili9486_Scroll,
   ili9486_WriteChar,
+  ili9486_WriteCharNoBG,
   ili9486_WriteString,
+  ili9486_WriteStringNoBG,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;
@@ -579,6 +582,44 @@ void ili9486_WriteChar(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16
 		}
 	}
 }
+/**
+  * @brief  Write 1 char on display (without BG color, more speed in some case)
+  * @param  Xpo:   Start X position in the LCD
+  * @param  Ypo:   Start Y position in the LCD
+  * @param  chr:  Display Char
+  * @param  fonto: font select (from font.h)
+  * @param  RGB_Coder: Text Color
+  * @retval None
+  */
+void ili9486_WriteCharNoBG(uint16_t Xpo, uint16_t Ypo, char *chr,sFONT fonto, uint16_t RGB_Coder){
+	/*ex
+	 * ili9486_WriteCharNoBG(10, 30, "E", Font24, cl_ORANGE);
+	 * */
+	//// stored font data
+	uint32_t hop32 = 0;
+	uint8_t b8[4] = {0};
+
+	//// find num of bit rows per jump in fonts.c
+	int rowbox = ceilf((float)(fonto.Width) / 8);
+	uint32_t clif_msb = 0x80 << (8 * (rowbox - 1));
+
+	for(int i = 0; i < fonto.Height; i++){
+		hop32 = 0;
+		for(int k = 0;k < rowbox;k++){
+			b8[k] = fonto.table[((int)(*chr - 32) * fonto.Height * rowbox) + (i * rowbox) + k];
+			hop32 = (hop32 << 8) + b8[k];
+		}
+
+		for(int j = 0; j < fonto.Width; j++){
+			//// if valuein fonttable is 1
+			if((hop32 << j) & clif_msb){ // buu32.b32
+				ili9486_WritePixel(Xpo + j, Ypo + i, RGB_Coder);
+			}
+		}
+	}
+}
+
+
 
 /**
   * @brief  Write text string on display
@@ -614,6 +655,41 @@ void ili9486_WriteString(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto
 		}
 		//ST7735_WriteChar(x, y, *str, font, color, bgcolor);
 		ili9486_WriteChar(Xpo, Ypo, strr, fonto, RGB_Coder, RGB_bg);
+		Xpo += fonto.Width;
+		strr++;
+	}
+}
+
+/**
+  * @brief  Write text string on display
+  * @param  Xpo:   Start X position in the LCD
+  * @param  Ypo:   Start Y position in the LCD
+  * @param  Strr:  Display Text
+  * @param  fonto: font select (from font.h)
+  * @param  RGB_Coder: Text Color
+  * @retval None
+  */
+void ili9486_WriteStringNoBG(uint16_t Xpo, uint16_t Ypo,const char* strr,sFONT fonto, uint16_t RGB_Coder){
+	/*ex
+	 * ili9486_WriteString(20, 300, "Helios xTerra", Font20, cl_WHITE, cl_BLACK);
+	 * */
+	uint16_t ili_heigh = ili9486_GetLcdPixelHeight();
+	uint16_t ili_width = ili9486_GetLcdPixelWidth();
+	while(*strr){
+	//// Check screen overflow / new line
+		if(Xpo + fonto.Width >= ili_width){
+			Xpo = 0;
+			Ypo += fonto.Height;
+
+			if(Ypo + fonto.Height >= ili_heigh){
+				break;
+			}
+			if(*strr == ' ') {
+				strr++;
+				continue;
+			}
+		}
+		ili9486_WriteCharNoBG(Xpo, Ypo, strr, fonto, RGB_Coder);
 		Xpo += fonto.Width;
 		strr++;
 	}
