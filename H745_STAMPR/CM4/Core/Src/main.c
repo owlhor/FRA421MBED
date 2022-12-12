@@ -289,6 +289,7 @@ int main(void)
 
 		  MFRC522_SelfTest();
 		  printUART("RC522 Self test\r\n", 10);
+		  printUART("Please Reset Board After ok\r\n", 10);
 		  flag_one = 0;
 	  }
   }

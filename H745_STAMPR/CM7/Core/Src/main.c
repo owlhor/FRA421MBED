@@ -28,11 +28,11 @@
 #include "LCDrivers/Fonts/fonts.h"
 #include "LCDrivers/ili9486.h"
 #include "testimg.h"
-#include "personalINFO/PersonaINFO.h"
+#include "personalINFO/persona_2.h"
 
 /* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private typedef ---------------------- -------------------------------------*/
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -83,15 +83,22 @@ DMA_HandleTypeDef hdma_usart3_tx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
+
+//// buffer for UART send
 char txtdispBF[120] = {0};
+//// RealTime Clock Handler
 RTC_TimeTypeDef NowTim7;
 RTC_DateTypeDef NowDat7;
 
 uint32_t timestamp_one = 0;
-uint32_t timestamp_grandis[3] = {0};
+uint32_t timestamp_grandis[2] = {0};
 
+//// Grand State
 static enum{st_lobby, st_search, st_show, st_waitend} GranDiSTATE = st_lobby;
+
+// number of data in dataset which match the scanned card, -1 means no ones match
 int8_t px_ID_match = -1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -178,12 +185,12 @@ Error_Handler();
     ili9486_DisplayOn();
 
     ili_scr_1();
-    //ili9486_WriteString(20, 20, " > STAMPR ----->>>-----", Font20, cl_WHITE, cl_BLACK);
-    //ili9486_WriteString(420, 270, " OWL_HOR ", Font16, cl_BLUE, cl_BLACK);
+
     ili9486_FillRect(0, 0, 480, 35, cl_BLUE);
     ili9486_WriteStringNoBG(10, 10, " > STAMPR ----->>>-----", Font20, cl_WHITE);
-    //ili9486_WriteStringNoBG(400, 15, " OWL_HOR ", Font12, cl_WHITE);
+    ili9486_WriteStringNoBG(400, 10, " OWL_HOR ", Font12, cl_WHITE);
     ili9486_DrawRGBImage(140, 120, 128, 128, (uint16_t*)test_img_128x128);
+    ili9486_WriteStringNoBG(10, 40, " Scan the RFID Tag", Font20, cl_OLIVE);
 
   /* USER CODE END 2 */
 
@@ -192,7 +199,7 @@ Error_Handler();
   while (1)
   {
 
-	  //// Timer Manager
+	  //// Time Clock Manager / Independent from GranDiState
 	  if(HAL_GetTick() - timestamp_one >= 500){
 	  		  timestamp_one = HAL_GetTick();
 	  		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
@@ -209,35 +216,34 @@ Error_Handler();
 	  		ili9486_WriteString(365, 60, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
 	  	  }
 
-	  //// State Manager not displaying write order
+	  //// State Manager
 	  if(HAL_GetTick() - timestamp_grandis[0] >= 100){
 		  timestamp_grandis[0] = HAL_GetTick();
 
 		  switch (GranDiSTATE){
 		  default:
 		  case st_lobby:
-			  //// ------------------------------------------------------------------------------
-
-
+			  //// ---- wait for scanned cards----------------------------------------------
 			  //if(HAL_HSEM_Take(2, 2) == HAL_OK){
-				  if ( SRAM4-> flag_UID == 1){
+			  if ( SRAM4-> flag_UID == 1){
 
-					  //GranDiSTATE = st_show;
-					  GranDiSTATE = st_search;
-					  SRAM4-> flag_UID = 0;
-					  //timestamp_grandis[1] = HAL_GetTick();
-				  }
+				  //GranDiSTATE = st_show;
+				  GranDiSTATE = st_search;
+				  SRAM4-> flag_UID = 0;
+				  //timestamp_grandis[1] = HAL_GetTick();
+			  }
 			  	//  HAL_HSEM_Release(2, 2);
 			  	//}
 			  break;
 
 		  case st_search:
-
-			  //// ------------------------------------------------------------------------------
-			  //// search match ID before show everything in st_show
-			  //// if SD Card, call AllID in SD keep in buffer to search then call pic data if found
-			  /* 1 - call all ID in database / how to stored all of it for search
-			   * 2 - search from ID 1 to last
+			  //// ---------------------------------------------------------
+			  /* search match ID before show everything in st_show
+			   *
+			   * if SD Card, call All ID in SD keep in buffer to search
+			   * then call pic data if found
+			   * 1 - call all ID in database
+			   * 2 - search from ID 0 to last
 			   * 3 - search from UID[0] if not match -> go to next ID
 			   *   - if not found any -> return n/a status and report no data in base
 			   *   - if found -> break and end the search/ return personna -> go to st_show
@@ -246,11 +252,11 @@ Error_Handler();
 			  px_ID_match = -1; //// -1 means not found preferred
 			  //// Breadth-First-Search cat cat
 			  	 for(int y = 0;y <= PERSONA_LEN; y++){
-			  		 if (SRAM4->UUID[0] == px_person[y].USID[0]){
-			  			 if (SRAM4->UUID[1] == px_person[y].USID[1]){
-			  				if (SRAM4->UUID[2] == px_person[y].USID[2]){
-			  					if (SRAM4->UUID[3] == px_person[y].USID[3]){
-			  						px_ID_match = y;
+			  		 if (SRAM4->UUID[0] == pxs_persons[y].USID[0]){
+			  			 if (SRAM4->UUID[1] == pxs_persons[y].USID[1]){
+			  				if (SRAM4->UUID[2] == pxs_persons[y].USID[2]){
+			  					if (SRAM4->UUID[3] == pxs_persons[y].USID[3]){
+			  						px_ID_match = y; //// return match ID
 			  						break; //// end search
 			  					}// search layer 3
 			  				}// search layer 2
@@ -269,7 +275,7 @@ Error_Handler();
 			  //// ------------------------------------------------------------------------------
 
 			  // ID Show----------------------------
-			  sprintf(txtdispBF,"Found ID");
+			  sprintf(txtdispBF,"Scanned ID");
 			  ili9486_WriteString(160, 100, txtdispBF, Font20, cl_ORANGE, cl_BLACK);
 
 			  sprintf(txtdispBF,"UID: %02X %02X %02X %02X",
@@ -277,18 +283,18 @@ Error_Handler();
 			  ili9486_WriteString(160, 125, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
 			  // ID Show-----------------------------
 
-			  //// try using prottypo concept / hal handeltypedef hi2c; /
-			  ////// dummy only, it works
-			  if (SRAM4->UUID[0] == p1_owl.USID[0] &&
-				  SRAM4->UUID[1] == p1_owl.USID[1] &&
-				  SRAM4->UUID[2] == p1_owl.USID[2] &&
-				  SRAM4->UUID[3] == p1_owl.USID[3]){
-
-				  ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)p1_owl.pic);
-				  ili9486_WriteString(160, 150, p1_owl.Name, Font20, cl_GREEN, cl_BLACK);
-				  ili9486_WriteString(160, 175, p1_owl.Surname, Font20, cl_GREEN, cl_BLACK);
-				  ili9486_WriteString(160, 200, p1_owl.welcom_txt, Font16, cl_ORANGE, cl_BLACK);
-			  }
+			  ////// single dataset dummy only, it works
+			  ///// activate persona_1.c before uncomment these
+//			  if (SRAM4->UUID[0] == p1_owl.USID[0] &&
+//				  SRAM4->UUID[1] == p1_owl.USID[1] &&
+//				  SRAM4->UUID[2] == p1_owl.USID[2] &&
+//				  SRAM4->UUID[3] == p1_owl.USID[3]){
+//
+//				  ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)p1_owl.pic);
+//				  ili9486_WriteString(160, 150, p1_owl.Name, Font20, cl_GREEN, cl_BLACK);
+//				  ili9486_WriteString(160, 175, p1_owl.Surname, Font20, cl_GREEN, cl_BLACK);
+//				  ili9486_WriteString(160, 200, p1_owl.welcom_txt, Font16, cl_ORANGE, cl_BLACK);
+//			  }
 #ifdef px_ID_search_datasss
 			  //// ---- show pic
 			  if(px_ID_match == -1){
@@ -296,26 +302,16 @@ Error_Handler();
 				  ili9486_WriteString(160, 160,"NO ID IN DATABASE", Font24, cl_RED, cl_BLACK);
 
 			  }else{
-				  ili9486_DrawRGBImage(20, 100, 128, 128, (uint16_t*)px_person[px_ID_match].pic);
-				  ili9486_WriteString(160, 150, px_person[px_ID_match].Name, Font20, cl_GREEN, cl_BLACK);
-				  ili9486_WriteString(160, 175, px_person[px_ID_match].Surname, Font20, cl_GREEN, cl_BLACK);
-				  ili9486_WriteString(160, 200, px_person[px_ID_match].welcom_txt, Font16, cl_ORANGE, cl_BLACK);
+				  ili9486_DrawRGBImage(20, 100,
+						  pxs_persons[px_ID_match].picXs,
+						  pxs_persons[px_ID_match].picYs,
+						  (uint16_t*)pxs_persons[px_ID_match].pic);
+				  ili9486_WriteString(160, 150, pxs_persons[px_ID_match].Name, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 175, pxs_persons[px_ID_match].Surname, Font20, cl_GREEN, cl_BLACK);
+				  ili9486_WriteString(160, 200, pxs_persons[px_ID_match].welcom_txt, Font16, cl_CYAN, cl_BLACK);
 			  }
 #endif
 			  GranDiSTATE = st_waitend;
-
-			  ////// Ending display and back to lobby------------------
-//			  if(HAL_GetTick() - timestamp_grandis[1] >= k_tim_show_milli){
-//				  GranDiSTATE = st_lobby;
-//				  // clear Display
-//				  ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
-//
-//				  //// clear UID
-//				  SRAM4->UUID[0] = 0;
-//				  SRAM4->UUID[1] = 0;
-//				  SRAM4->UUID[2] = 0;
-//				  SRAM4->UUID[3] = 0;
-//			  }
 
 			  break;
 
@@ -328,11 +324,13 @@ Error_Handler();
 				  // clear Display
 				  ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
 
-				  //// clear UID
+				  //// clear UID if nothing left in queue
+				  if (SRAM4->flag_UID == 0){
 				  SRAM4->UUID[0] = 0;
 				  SRAM4->UUID[1] = 0;
 				  SRAM4->UUID[2] = 0;
 				  SRAM4->UUID[3] = 0;
+				  }
 			  }
 			  break;
 

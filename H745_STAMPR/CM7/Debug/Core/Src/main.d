@@ -42,7 +42,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../LIBJPEG/Target/jmorecfg.h ../Core/Src/../../../Common/Src/SRAM4.h \
  ../Core/Src/LCDrivers/Fonts/fonts.h ../Core/Src/LCDrivers/ili9486.h \
  ../Core/Src/LCDrivers/Fonts/fonts.h ../Core/Inc/testimg.h \
- ../Core/Src/personalINFO/PersonaINFO.h
+ ../Core/Src/personalINFO/persona_2.h \
+ ../Core/Src/personalINFO/PersonaINFO.h \
+ ../Core/Src/personalINFO/persona_3.h
 ../Core/Inc/main.h:
 ../../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 ../Core/Inc/stm32h7xx_hal_conf.h:
@@ -91,4 +93,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Src/LCDrivers/ili9486.h:
 ../Core/Src/LCDrivers/Fonts/fonts.h:
 ../Core/Inc/testimg.h:
+../Core/Src/personalINFO/persona_2.h:
 ../Core/Src/personalINFO/PersonaINFO.h:
+../Core/Src/personalINFO/persona_3.h:

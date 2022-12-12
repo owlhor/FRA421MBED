@@ -10,13 +10,39 @@
 #define SRC_PERSONALINFO_PERSONAINFO_H_
 
 #include <stdio.h>
-#include <strings.h>
+//#include <strings.h>
 
-#define PERSONA_LEN 12
+#define px_ID_search_datasss
+#define FOR_compile_test
 
-//#define px_ID_search_datasss
+typedef struct _personna{
+	const uint8_t USID[5]; //// ID of RFID Card for that user
+	const char Name[20];
+	const char Surname[20];
+	const char welcom_txt[50];
+	const uint16_t *pic;  //// RGB565 Pic format
+	const uint16_t picXs; //// bitmap pic size x axis
+	const uint16_t picYs; //// bitmap pic size y axis
+	/*in sd card later
+	 * TimeIN / TimeOUT / Counter
+	 * */
+}Personna;
 
-/* fonts.h ex
+//// single test
+extern Personna p1_owl;
+
+
+//// test ---------/-----------/---------------
+
+//typedef struct _mystructxt {
+//
+//  //const char * const l_name; //
+//  uint8_t x_m;
+//  uint8_t y_m;
+//  //uint16_t period[4];
+//} myStructxt;
+
+/* fonts.h ex --------------------------------------------------------------
 typedef struct _tFont
 {
   const uint8_t *table;
@@ -39,23 +65,8 @@ sFONT Font12 = {
   7,  Width
   12,  Height
 }
-
+------------------------------------------------------------------------------
  * */
-typedef struct _personna{
-	uint8_t USID[5]; //// ID of RFID Card for that user
-	char Name[20];
-	char Surname[20];
-	char welcom_txt[20];
-	const uint16_t *pic;
-	/*in sd card later
-	 * TimeIN / TimeOUT / Counter
-	 * */
-}Personna;
 
-extern Personna p1_owl;
-
-#ifdef px_ID_search_datasss
-extern Personna px_person[10];
-#endif
 
 #endif /* SRC_PERSONALINFO_PERSONAINFO_H_ */
