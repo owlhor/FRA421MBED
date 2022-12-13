@@ -18,7 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include <stdio.h>
+#include <string.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -34,7 +35,11 @@
 
 //#define dynamix_WRKS
 #define MCP3002_WRK
+//#define INA219_WRK
 #define EXT_WWDG_TGGR
+
+#define INA219_ADDR 0b10000000
+#define INA219_CRNT 0x04
 
 /* USER CODE END PD */
 
@@ -50,6 +55,8 @@ TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart2_rx;
+DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 char TxDataBuffer[32] =
@@ -107,10 +114,18 @@ union {
 	uint16_t U16;
 } goalpos = {0};
 
+
+//// INA219
+union {
+	uint8_t U8[10];
+	uint16_t U16[5];
+} inabuf = {0};
+
 uint8_t flag_dyna = 0;
 uint16_t counter = 0;
 uint8_t wdg_tig = 0;
 uint32_t timestamp_one = 0;
+uint32_t timestamp_two = 0;
 uint32_t timestamp_wdg = 0;
 uint32_t timestamp_dmx = 0;
 uint64_t _micro;
@@ -119,6 +134,7 @@ uint64_t _micro;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_TIM11_Init(void);
@@ -163,6 +179,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_SPI2_Init();
   MX_TIM11_Init();
@@ -170,16 +187,22 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //HAL_TIM_Base_Start_IT(&htim11);
 
-  MCrq1.MCP3002_8.REQFig = M_SE_CH0;
+  MCrq1.MCP3002_8.REQFig = M_Diff_01;
   MCrq2.MCP3002_8.REQFig = M_SE_CH1;
   HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
 
+    char temp[]="----------------- F411_MultiSP --------------------\r\n";
+    HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),10);
+
+#ifdef dynamix_WRKS
   dyna_01.dymix.header1 = 0xff;
   dyna_01.dymix.header2 = 0xff;
   dyna_01.dymix.DXL_ID = 0x03;
   dyna_01.dymix.Instruct = write;
 
   dynamix_enable_torque();
+#endif
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -219,7 +242,7 @@ int main(void)
 			  MCP3002_READ(MCrq1.U16, &MCread1.U16); //&A_bitread
 		  }
 		  else{
-			  MCP3002_READ(MCrq1.U16, &MCrq1.U16); //&A_bitread
+			  //MCP3002_READ(MCrq1.U16, &MCrq1.U16); //&A_bitread
 		  }
 
 
@@ -227,6 +250,9 @@ int main(void)
 		  //// Dout x VCC / 4096 = Vin
 		  //// << 1 to add 1 lost LSB
 		  VADC_c = (MCread1.MCP3002_8.bitread << 1) * 0.00120; //// 1/4096 *5 = 5 * 0.000244140625
+
+		  sprintf(TxDataBuffer, "VADC %x \r\n",  MCread1.MCP3002_8.bitread);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
 
 		  flag_spi2_read = 0;
 		}
@@ -272,6 +298,15 @@ int main(void)
 	  	  	  }
 #endif
 
+
+#ifdef INA219_WRK
+	  if (HAL_GetTick() - timestamp_two >= 1000){
+		  timestamp_two = HAL_GetTick();
+		  uint8_t memaddr = 0x00;
+
+		  HAL_I2C_Mem_Read(&hi2c1, INA219_ADDR, memaddr, I2C_MEMADD_SIZE_8BIT, &inabuf.U8[0], 8, 100);
+	  }
+#endif
   }
   /* USER CODE END 3 */
 }
@@ -454,6 +489,25 @@ static void MX_USART6_UART_Init(void)
   /* USER CODE BEGIN USART6_Init 2 */
 
   /* USER CODE END USART6_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
 
 }
 
