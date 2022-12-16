@@ -123,7 +123,6 @@ static void MX_RTC_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI4_Init(void);
-static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void printUART(char* texts, uint8_t timeoutc);
 /* USER CODE END PFP */
@@ -178,7 +177,6 @@ int main(void)
   MX_I2C2_Init();
   MX_DMA_Init();
   MX_SPI4_Init();
-  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   //HAL_TIM_Base_Start_IT(&htim17);
@@ -290,6 +288,7 @@ int main(void)
 		  MFRC522_SelfTest();
 		  printUART("RC522 Self test\r\n", 10);
 		  printUART("Please Reset Board After ok\r\n", 10);
+		  MFRC522_HardResetSet();
 		  flag_one = 0;
 	  }
   }
@@ -549,7 +548,7 @@ static void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -669,8 +668,8 @@ void printUART(char* texts, uint8_t timeoutc){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
-		flag_one = 3;   ////MFRC522_SelfTest();
-
+		//flag_one = 3;   ////MFRC522_SelfTest();
+		SRAM4->flag_blue_btn = 1;
 		}
 }
 

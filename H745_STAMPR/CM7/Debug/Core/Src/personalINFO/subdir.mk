@@ -5,19 +5,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/personalINFO/persona_1.c \
-../Core/Src/personalINFO/persona_2.c \
-../Core/Src/personalINFO/persona_3.c 
+../Core/Src/personalINFO/persona_1.c 
 
 OBJS += \
-./Core/Src/personalINFO/persona_1.o \
-./Core/Src/personalINFO/persona_2.o \
-./Core/Src/personalINFO/persona_3.o 
+./Core/Src/personalINFO/persona_1.o 
 
 C_DEPS += \
-./Core/Src/personalINFO/persona_1.d \
-./Core/Src/personalINFO/persona_2.d \
-./Core/Src/personalINFO/persona_3.d 
+./Core/Src/personalINFO/persona_1.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -27,7 +21,7 @@ Core/Src/personalINFO/%.o Core/Src/personalINFO/%.su: ../Core/Src/personalINFO/%
 clean: clean-Core-2f-Src-2f-personalINFO
 
 clean-Core-2f-Src-2f-personalINFO:
-	-$(RM) ./Core/Src/personalINFO/persona_1.d ./Core/Src/personalINFO/persona_1.o ./Core/Src/personalINFO/persona_1.su ./Core/Src/personalINFO/persona_2.d ./Core/Src/personalINFO/persona_2.o ./Core/Src/personalINFO/persona_2.su ./Core/Src/personalINFO/persona_3.d ./Core/Src/personalINFO/persona_3.o ./Core/Src/personalINFO/persona_3.su
+	-$(RM) ./Core/Src/personalINFO/persona_1.d ./Core/Src/personalINFO/persona_1.o ./Core/Src/personalINFO/persona_1.su
 
 .PHONY: clean-Core-2f-Src-2f-personalINFO
 

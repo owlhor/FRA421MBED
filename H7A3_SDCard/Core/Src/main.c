@@ -230,7 +230,7 @@ int main(void)
 
 
   //SDMMC_Ex1();
-  char temp[]="--------------------HELLIOS TERRA----------------------"
+  char temp[]="--------------------H7A3_SDCard----------------------"
 		  "\r\n Welcome to UART Port 115200 8 bit/stop1 none parity\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),30); // strlen = length of str -> config length of data
   SDCard_init();

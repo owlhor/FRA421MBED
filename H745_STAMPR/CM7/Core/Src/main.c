@@ -28,11 +28,12 @@
 #include "LCDrivers/Fonts/fonts.h"
 #include "LCDrivers/ili9486.h"
 #include "testimg.h"
+#include "testimg_2.h"
 #include "personalINFO/persona_2.h"
 
 /* USER CODE END Includes */
 
-/* Private typedef ---------------------- -------------------------------------*/
+/* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -45,6 +46,7 @@
 #endif
 
 #define k_tim_show_milli 5000
+#define k_cnt_show 35
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -90,11 +92,13 @@ char txtdispBF[120] = {0};
 RTC_TimeTypeDef NowTim7;
 RTC_DateTypeDef NowDat7;
 
-uint32_t timestamp_one = 0;
+uint32_t timestamp_one[2] = {0};
 uint32_t timestamp_grandis[2] = {0};
 
 //// Grand State
 static enum{st_lobby, st_search, st_show, st_waitend} GranDiSTATE = st_lobby;
+static uint8_t flag_waitpause = 0;
+uint32_t cnter_wait = 0;
 
 // number of data in dataset which match the scanned card, -1 means no ones match
 int8_t px_ID_match = -1;
@@ -105,10 +109,12 @@ int8_t px_ID_match = -1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ETH_Init(void);
+static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_DMA_Init(void);
 /* USER CODE BEGIN PFP */
 void ili_scr_1();
+void ili_seq_arrow();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -174,12 +180,14 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ETH_Init();
+  MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_DMA_Init();
   MX_LIBJPEG_Init();
   /* USER CODE BEGIN 2 */
 
   	SRAM4-> flag_UID = 0;
+  	SRAM4-> flag_blue_btn = 0;
 
   	ili9486_Init();
     ili9486_DisplayOn();
@@ -189,8 +197,25 @@ Error_Handler();
     ili9486_FillRect(0, 0, 480, 35, cl_BLUE);
     ili9486_WriteStringNoBG(10, 10, " > STAMPR ----->>>-----", Font20, cl_WHITE);
     ili9486_WriteStringNoBG(400, 10, " OWL_HOR ", Font12, cl_WHITE);
-    ili9486_DrawRGBImage(140, 120, 128, 128, (uint16_t*)test_img_128x128);
+
     ili9486_WriteStringNoBG(10, 40, " Scan the RFID Tag", Font20, cl_OLIVE);
+    //ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
+    ili9486_DrawRGBImage(90, 90, 277, 170, (uint16_t*)image_data_owlsOFCC);
+
+	  /*
+	   * WWDG must be reset every ____ mSec
+	   * APB Clk = 120 MHz
+	   * Prescalar = 2^3 = 8
+	   * reloadt = 127 (disable g bit, 0b 0g11 1111 -> get 63)
+	   * reloadw = 100 (disable g bit, 0b 0g10 0100 -> get 36)
+	   * timeout = (1/120MHz) * 4096 * Presclr * (reloadt+1) = 0.065 sec
+	   * window  = (1/120MHz) * 4096 * Presclr * (reloadw+1) = 0.037 sec
+	   *
+	   * IWDG
+	   * Prescalr = 64
+	   * Reload = 4095
+	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
+	   * */
 
   /* USER CODE END 2 */
 
@@ -200,8 +225,8 @@ Error_Handler();
   {
 
 	  //// Time Clock Manager / Independent from GranDiState
-	  if(HAL_GetTick() - timestamp_one >= 500){
-	  		  timestamp_one = HAL_GetTick();
+	  if(HAL_GetTick() - timestamp_one[0] >= 500){
+	  		  timestamp_one[0] = HAL_GetTick();
 	  		  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 
 	  		NowDat7 = SRAM4->NowDates;
@@ -214,11 +239,18 @@ Error_Handler();
 	  		sprintf(txtdispBF, "%02x/%02x/%02x",
 	  			  				  NowDat7.Date, NowDat7.Month, NowDat7.Year);
 	  		ili9486_WriteString(365, 60, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
+
 	  	  }
+//	  if(HAL_GetTick() - timestamp_one[1] >= 100){
+//	  	  	timestamp_one[1] = HAL_GetTick();
+//
+//	  	  }
 
 	  //// State Manager
 	  if(HAL_GetTick() - timestamp_grandis[0] >= 100){
 		  timestamp_grandis[0] = HAL_GetTick();
+
+		  ili_seq_arrow();
 
 		  switch (GranDiSTATE){
 		  default:
@@ -231,6 +263,9 @@ Error_Handler();
 				  GranDiSTATE = st_search;
 				  SRAM4-> flag_UID = 0;
 				  //timestamp_grandis[1] = HAL_GetTick();
+
+				  //// clear Lobby BG
+				  ili9486_FillRect(90, 90, 277, 170, cl_BLACK);
 			  }
 			  	//  HAL_HSEM_Release(2, 2);
 			  	//}
@@ -311,6 +346,7 @@ Error_Handler();
 				  ili9486_WriteString(160, 200, pxs_persons[px_ID_match].welcom_txt, Font16, cl_CYAN, cl_BLACK);
 			  }
 #endif
+			  cnter_wait = 0; // start counter
 			  GranDiSTATE = st_waitend;
 
 			  break;
@@ -318,11 +354,41 @@ Error_Handler();
 		  case st_waitend:
 			  /* Using waitend to wait, if still in show -> CPU will write display continuously
 			   * */
+
+			  //// toggle blue btn flag to pause time
+			  if(SRAM4->flag_blue_btn == 1){
+				  flag_waitpause += 1;
+				  flag_waitpause %= 2;
+				  if (flag_waitpause == 1){
+					  ili9486_WriteString(200, 230, "PAUSE", Font24, cl_RED, cl_YELLOW);
+				  }else{
+					  ili9486_FillRect(200, 230, 120, 24, cl_BLACK);
+					  flag_waitpause = 0; // force
+				  }
+				  SRAM4->flag_blue_btn = 0;
+			  }
+
+			  //// time counter, run with timestamp of grandis sub[0] x main[1]
+			  if(flag_waitpause == 0 &&
+					  HAL_GetTick() - timestamp_grandis[1] >= 1){
+				  timestamp_grandis[1] = HAL_GetTick();
+				  cnter_wait++;
+			  }
+
 			  ////// Ending display and back to lobby------------------
-			  if(HAL_GetTick() - timestamp_grandis[1] >= k_tim_show_milli){
+			  //// timer
+//			  if(flag_waitpause == 0 &&
+//					  HAL_GetTick() - timestamp_grandis[1] >= k_tim_show_milli){
+			  //// counter
+			  if(cnter_wait >= k_cnt_show){
+				  cnter_wait = 0; //// counter reset
 				  GranDiSTATE = st_lobby;
 				  // clear Display
-				  ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
+				  //ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
+				  //re_lobby
+				  ili9486_FillRect(2, 90, 100, 200, cl_BLACK);
+				  ili9486_FillRect(365, 90, 110, 200, cl_BLACK);
+				  ili9486_DrawRGBImage(90, 90, 277, 170, (uint16_t*)image_data_owlsOFCC);
 
 				  //// clear UID if nothing left in queue
 				  if (SRAM4->flag_UID == 0){
@@ -532,7 +598,7 @@ void MX_RTC_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -662,6 +728,58 @@ void ili_scr_1(){
 	  ili9486_FillRect(320, 300, 80, 20, cl_MAGENTA); // M 0xF81F
 	  ili9486_FillRect(400, 300, 80, 20, cl_YELLOW); // Y0xFFE0
 	  //ili9486_FillRect(390, 30, 70, 230, cl_BLACK); // K
+}
+
+void ili_seq_arrow(){
+	//ili9486_WriteStringNoBG(10, 10, " > STAMPR ----->>>-----", Font20, cl_WHITE);
+	static uint8_t st_arr = 0;
+	uint8_t xpoo = 166;
+	uint8_t ypoo = 10;
+
+	switch(st_arr){
+	default:
+	case 0:
+		ili9486_WriteString(xpoo, ypoo, "----->>>-----", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 1:
+		ili9486_WriteString(xpoo, ypoo, "------>>>----", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 2:
+		ili9486_WriteString(xpoo, ypoo, "------->>>---", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 3:
+		ili9486_WriteString(xpoo, ypoo, "-------->>>--", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 4:
+		ili9486_WriteString(xpoo, ypoo, "--------->>>-", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 5:
+		ili9486_WriteString(xpoo, ypoo, "---------->>>", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 6:
+		ili9486_WriteString(xpoo, ypoo, ">---------->>", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 7:
+		ili9486_WriteString(xpoo, ypoo, ">>---------->", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 8:
+		ili9486_WriteString(xpoo, ypoo, ">>>----------", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 9:
+		ili9486_WriteString(xpoo, ypoo, "->>>---------", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 10:
+		ili9486_WriteString(xpoo, ypoo, "-->>>--------", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 11:
+		ili9486_WriteString(xpoo, ypoo, "--->>>-------", Font20, cl_WHITE, cl_BLUE);
+		break;
+	case 12:
+		ili9486_WriteString(xpoo, ypoo, "---->>>------", Font20, cl_WHITE, cl_BLUE);
+		break;
+	}
+	st_arr++;
+	st_arr%=13;
 }
 /* USER CODE END 4 */
 

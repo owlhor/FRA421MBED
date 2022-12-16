@@ -25,6 +25,7 @@ typedef struct
 	RTC_DateTypeDef NowDates;
 	uint8_t flag_UID;
 	uint8_t UUID[10];
+	uint8_t flag_blue_btn;
 	//uint32_t DATA[500];
 
 }SharedMem;
