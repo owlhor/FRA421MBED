@@ -85,6 +85,7 @@ DMA_HandleTypeDef hdma_usart3_tx;
 uint64_t _micros = 0;
 uint32_t timestamp_one = 0;
 uint32_t timestamp_two = 0;
+uint32_t timestamp_wwdg2 = 0;
 
 RTC_TimeTypeDef NowTime;
 RTC_DateTypeDef NowDate;
@@ -123,6 +124,7 @@ static void MX_RTC_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI4_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void printUART(char* texts, uint8_t timeoutc);
 /* USER CODE END PFP */
@@ -177,6 +179,7 @@ int main(void)
   MX_I2C2_Init();
   MX_DMA_Init();
   MX_SPI4_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   //HAL_TIM_Base_Start_IT(&htim17);
@@ -188,6 +191,8 @@ int main(void)
   MFRC522_Init();
   //// MFRC522 version 2.0 software version is: 92h
   rc522_version = Read_MFRC522(VersionReg);
+
+  //HAL_WWDG_Refresh(&hwwdg2);
 
 #define Huart3
 #ifdef Huart3
@@ -205,6 +210,7 @@ int main(void)
   status_522 = Read_MFRC522(VersionReg);
   sprintf(txtUARTBF, "Version  %xh \r\n",status_522);
   HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
+
 #endif
   /* USER CODE END 2 */
 
@@ -217,6 +223,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  //// DS3231
 	  if(HAL_GetTick() - timestamp_one >= 500){
 		  timestamp_one = HAL_GetTick();
 		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
@@ -232,7 +240,31 @@ int main(void)
 		  	  }
 	  }
 
-	  if(HAL_GetTick() - timestamp_two >= 1500){
+	  //// WWDG togger
+	  /*
+	   * WWDG must be reset every 65 - 279 mSec
+	   * APB Clk = 120 MHz / use APB Clk in ms
+	   * Prescalar = 128
+	   * reloadt = 127 (disable T bit, 0b 0T11 1111 -> get 63)
+	   * reloadw = 112 (disable T bit, 0b 0T11 0000 -> get 48)
+	   * timeout = (1/120MHz) * 4096 * Presclr * (reloadt+1) = 0.279 sec
+	   * window  = (1/120MHz) * 4096 * Presclr * (reloadw+1) = 0.214 sec
+	   * If reloads counter while counter greater than value in window register,a reset is generated.
+	   *
+	   * When WWDG_CR.T[6] changes from 1 -> 0 (0x40 -> 0x3F) => WWDG RESET CPU
+	   *
+	   * IWDG
+	   * Prescalr = 64
+	   * Reload = 4095
+	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
+	   * */
+//	  if(HAL_GetTick() - timestamp_wwdg2 >= 150 ){ // flag_dis_wwdg for test only && SRAM4->flag_dis_wwdg != 12
+//	  	  timestamp_wwdg2 = HAL_GetTick();
+//		  HAL_WWDG_Refresh(&hwwdg2);
+//	  }
+
+	  //// MFRC522
+	  if(HAL_GetTick() - timestamp_two >= 1000){
 		  timestamp_two = HAL_GetTick();
 //		  //// SPI test-------------------------
 //		  uint8_t addr00[6] = {0x01,0x09,0x0A,0x0D,0x11,0x13};
@@ -249,7 +281,7 @@ int main(void)
 
 		  // Find cards
 		  status_5221 = MFRC522_Request(PICC_REQIDL, &bufferMM[1]);//bufferMM
-		  //bufferMM[3] = Read_MFRC522(FIFODataReg);
+		  bufferMM[3] = Read_MFRC522(FIFODataReg);
 		  status_522 = MFRC522_Anticoll(&cardstr[0]);
 
 		  sprintf(txtUARTBF, "Find Cards %x  %x  %x  %x \r\n",status_5221 ,status_522, bufferMM[1], bufferMM[3]);
@@ -548,7 +580,7 @@ static void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -670,6 +702,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
 		//flag_one = 3;   ////MFRC522_SelfTest();
 		SRAM4->flag_blue_btn = 1;
+		//SRAM4->flag_dis_wwdg = 12;
 		}
 }
 

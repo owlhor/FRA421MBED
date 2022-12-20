@@ -26,6 +26,7 @@ typedef struct
 	uint8_t flag_UID;
 	uint8_t UUID[10];
 	uint8_t flag_blue_btn;
+	//uint8_t flag_dis_wwdg; //// disable watchdog test
 	//uint32_t DATA[500];
 
 }SharedMem;

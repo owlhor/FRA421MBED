@@ -94,6 +94,7 @@ RTC_DateTypeDef NowDat7;
 
 uint32_t timestamp_one[2] = {0};
 uint32_t timestamp_grandis[2] = {0};
+uint32_t timestamp_wwdg = 0;
 
 //// Grand State
 static enum{st_lobby, st_search, st_show, st_waitend} GranDiSTATE = st_lobby;
@@ -188,6 +189,7 @@ Error_Handler();
 
   	SRAM4-> flag_UID = 0;
   	SRAM4-> flag_blue_btn = 0;
+  	//SRAM4-> flag_dis_wwdg = 0;
 
   	ili9486_Init();
     ili9486_DisplayOn();
@@ -202,20 +204,6 @@ Error_Handler();
     //ili9486_FillRect(20, 100, 450, 200, cl_BLACK);
     ili9486_DrawRGBImage(90, 90, 277, 170, (uint16_t*)image_data_owlsOFCC);
 
-	  /*
-	   * WWDG must be reset every ____ mSec
-	   * APB Clk = 120 MHz
-	   * Prescalar = 2^3 = 8
-	   * reloadt = 127 (disable g bit, 0b 0g11 1111 -> get 63)
-	   * reloadw = 100 (disable g bit, 0b 0g10 0100 -> get 36)
-	   * timeout = (1/120MHz) * 4096 * Presclr * (reloadt+1) = 0.065 sec
-	   * window  = (1/120MHz) * 4096 * Presclr * (reloadw+1) = 0.037 sec
-	   *
-	   * IWDG
-	   * Prescalr = 64
-	   * Reload = 4095
-	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
-	   * */
 
   /* USER CODE END 2 */
 
@@ -241,10 +229,29 @@ Error_Handler();
 	  		ili9486_WriteString(365, 60, txtdispBF, Font20, cl_YELLOW, cl_BLACK);
 
 	  	  }
-//	  if(HAL_GetTick() - timestamp_one[1] >= 100){
-//	  	  	timestamp_one[1] = HAL_GetTick();
-//
-//	  	  }
+	  //// WWDG togger
+	  /*
+	   * WWDG must be reset every 65 - 279 mSec
+	   * APB Clk = 120 MHz / use APB Clk in ms
+	   * Prescalar = 128
+	   * reloadt = 127 (disable T bit, 0b 0T11 1111 -> get 63)
+	   * reloadw = 112 (disable T bit, 0b 0T11 0000 -> get 48)
+	   * timeout = (1/120MHz) * 4096 * Presclr * (reloadt+1) = 0.279 sec
+	   * window  = (1/120MHz) * 4096 * Presclr * (reloadw+1) = 0.214 sec
+	   * If reloads counter while counter greater than value in window register,a reset is generated.
+	   *
+	   * When WWDG_CR.T[6] changes from 1 -> 0 (0x40 -> 0x3F) => WWDG RESET CPU
+	   *
+	   * IWDG
+	   * Prescalr = 64
+	   * Reload = 4095
+	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
+	   * */
+//	  if(HAL_GetTick() - timestamp_wwdg >= 80 ){ // flag_dis_wwdg for test only && SRAM4->flag_dis_wwdg != 12
+//	  	  timestamp_wwdg = HAL_GetTick();
+//		  HAL_WWDG_Refresh(&hwwdg1);
+//	  }
+
 
 	  //// State Manager
 	  if(HAL_GetTick() - timestamp_grandis[0] >= 100){

@@ -57,10 +57,10 @@ LCD_DrvTypeDef   ili9486_drv =
   ili9486_FillRect,
   ili9486_ReadRGBImage,
   ili9486_Scroll,
-  ili9486_WriteChar,
-  ili9486_WriteCharNoBG,
-  ili9486_WriteString,
-  ili9486_WriteStringNoBG,
+//  ili9486_WriteChar,
+//  ili9486_WriteCharNoBG,
+//  ili9486_WriteString,
+//  ili9486_WriteStringNoBG,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;

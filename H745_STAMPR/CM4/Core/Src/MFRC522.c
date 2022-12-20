@@ -602,7 +602,7 @@ void MFRC522_StopCrypto1(void) {
 ////------------owl_hor-------owl_hor---------owl_hor----------
 void MFRC522_HardResetSet(void){
 	HAL_GPIO_WritePin(RC522_Rst_GPIO_Port, RC522_Rst_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	HAL_Delay(1); //// don't reset too long -> module won't read
 	HAL_GPIO_WritePin(RC522_Rst_GPIO_Port, RC522_Rst_Pin, GPIO_PIN_SET);
 }
 
