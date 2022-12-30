@@ -49,14 +49,23 @@ SD_HandleTypeDef hsd1;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
+WWDG_HandleTypeDef hwwdg1;
+
 DMA_HandleTypeDef hdma_dma_generator0;
 /* USER CODE BEGIN PV */
-uint32_t timestamp_one = 0;
 
+uint16_t PWMOut1 = 1000;
+uint16_t timerefresh_wwdg = 150;
+
+uint32_t timestamp_one = 0;
+uint32_t timestamp_wwdg = 0;
+char txtUARTBF[100] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,6 +76,8 @@ static void MX_USB_OTG_HS_USB_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SDMMC1_SD_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_WWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 void SDMMC_Ex1();
 void SDCard_init();
@@ -226,6 +237,8 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
   MX_SPI1_Init();
+  MX_TIM3_Init();
+  MX_WWDG1_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -233,7 +246,13 @@ int main(void)
   char temp[]="--------------------H7A3_SDCard----------------------"
 		  "\r\n Welcome to UART Port 115200 8 bit/stop1 none parity\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),30); // strlen = length of str -> config length of data
-  SDCard_init();
+  //SDCard_init();
+
+  //// PWM Test
+  HAL_TIM_Base_Start(&htim3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -243,7 +262,39 @@ int main(void)
 	  if(HAL_GetTick() - timestamp_one >= 1000){
 		  timestamp_one = HAL_GetTick();
 		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
+		  sprintf(txtUARTBF,"timestamp =  %d\r\n", (int)timestamp_one);
+		  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
+
+		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PWMOut1); // dutycycle
 	  }
+
+	  //// WWDG togger
+	  	  /*
+	  	   * WWDG must be reset every 65 - 279 mSec
+	  	   * APB Clk = 100 MHz / use APB Clk in ms
+	  	   * Prescalar = 128
+	  	   * reloadt = 63 (127 => disable T bit, 0b 0T11 1111 -> get 63)
+	  	   * reloadw = 48 (112 => disable T bit, 0b 0T11 0000 -> get 48)
+	  	   * timeout = (1/100000) * 4096 * Presclr * (reloadt+1) = 0.330 sec
+	  	   * window  = (1/100000) * 4096 * Presclr * (reloadw+1) = 0.251 sec
+	  	   * If reloads counter while counter greater than value in window register,a reset is generated.
+	  	   *
+	  	   * When WWDG_CR.T[6] changes from 1 -> 0 (0x40 -> 0x3F) => WWDG RESET CPU
+	  	   *
+	  	   * IWDG
+	  	   * Prescalr = 64
+	  	   * Reload = 4095
+	  	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
+	  	   * */
+	  if(HAL_GetTick() - timestamp_wwdg >= timerefresh_wwdg){ // flag_dis_wwdg for test only && SRAM4->flag_dis_wwdg != 12
+	  	  timestamp_wwdg = HAL_GetTick();
+		  HAL_WWDG_Refresh(&hwwdg1);
+
+		  //sprintf(txtUARTBF,"        wwdg tig\r\n");
+		  //HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -282,7 +333,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 24;
+  RCC_OscInitStruct.PLL.PLLN = 25;
   RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   RCC_OscInitStruct.PLL.PLLR = 2;
@@ -389,6 +440,65 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 9999;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 9999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -458,6 +568,36 @@ static void MX_USB_OTG_HS_USB_Init(void)
 }
 
 /**
+  * @brief WWDG1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_WWDG1_Init(void)
+{
+
+  /* USER CODE BEGIN WWDG1_Init 0 */
+
+  /* USER CODE END WWDG1_Init 0 */
+
+  /* USER CODE BEGIN WWDG1_Init 1 */
+
+  /* USER CODE END WWDG1_Init 1 */
+  hwwdg1.Instance = WWDG1;
+  hwwdg1.Init.Prescaler = WWDG_PRESCALER_128;
+  hwwdg1.Init.Window = 112;
+  hwwdg1.Init.Counter = 127;
+  hwwdg1.Init.EWIMode = WWDG_EWI_DISABLE;
+  if (HAL_WWDG_Init(&hwwdg1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN WWDG1_Init 2 */
+
+  /* USER CODE END WWDG1_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   * Configure DMA for memory to memory transfers
   *   hdma_dma_generator0
@@ -520,7 +660,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(USB_FS_PWR_EN_GPIO_Port, USB_FS_PWR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI1_SDCard_CS_GPIO_Port, SPI1_SDCard_CS_Pin, GPIO_PIN_SET);
@@ -530,7 +670,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -541,12 +681,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USB_FS_PWR_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD1_Pin LD3_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin;
+  /*Configure GPIO pin : LD3_Pin */
+  GPIO_InitStruct.Pin = LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(LD3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SPI1_SDCard_CS_Pin */
   GPIO_InitStruct.Pin = SPI1_SDCard_CS_Pin;
@@ -589,6 +729,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -629,6 +773,13 @@ void SDMMC_Ex1(){
 	    f_mount(&SDFatFS, (TCHAR const*)NULL, 0);
 }
 #endif
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == GPIO_PIN_13){
+			timerefresh_wwdg = 1000;
+		}
+}
 /* USER CODE END 4 */
 
 /**
