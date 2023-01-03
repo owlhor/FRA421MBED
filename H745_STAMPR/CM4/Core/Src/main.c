@@ -103,7 +103,7 @@ u_char status_522;
 u_char cardstr[MAX_LEN + 1];
 u_char card_data[17];
 uint32_t delay_val = 1000; //ms
-uint16_t result = 0;
+//uint16_t result = 0;
 uint8_t value = 0;
 
 char str1[17]={'\0'};
@@ -290,7 +290,7 @@ int main(void)
 		  if(status_522 == MI_OK) {
 			  printUART("Anticoll OK \r\n", 10);
 			  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
-			  result++;
+			  //result++;
 			  sprintf(txtUARTBF,"UID: %02X %02X %02X %02X \r\n", cardstr[0], cardstr[1], cardstr[2], cardstr[3]);
 			  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 			  UID[0] = cardstr[0];

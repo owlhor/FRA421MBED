@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -36,6 +35,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 //#define SDMMC_EX1
+#define WWDG_EN
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,8 +44,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
-SD_HandleTypeDef hsd1;
 
 SPI_HandleTypeDef hspi1;
 
@@ -74,13 +72,12 @@ static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_HS_USB_Init(void);
 static void MX_DMA_Init(void);
-static void MX_SDMMC1_SD_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_WWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 void SDMMC_Ex1();
-void SDCard_init();
+void SDCard_init_scr();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,7 +92,7 @@ void UART_Printf(const char* fmt, ...) {
     va_end(args);
 }
 
-void SDCard_init() {
+void SDCard_init_scr() {
     int code;
     UART_Printf("Ready!\r\n");
 
@@ -117,13 +114,17 @@ void SDCard_init() {
     UART_Printf("SDCARD_GetBlocksNumber() done! blocksNum = %u (or %u Mb)\r\n",
         blocksNum, blocksNum/2000 /* same as * 512 / 1000 / 1000 */);
 
-    uint32_t startBlockAddr = 0x00ABCD;
+    uint32_t startBlockAddr = 0x00AAAA;
     uint32_t blockAddr = startBlockAddr;
     uint8_t block[512];
+//    for(int i = 0; i < 500; i++){
+//    	block[i] = i % 256;
+//    }
+    block[0] = 0xAA; block[1] = 0xBB; block[2] = 0xCC; block[3] = 0xDD; block[4] = 0xEE;
 
     snprintf((char*)block, sizeof(block), "0x%08X", (int)blockAddr);
 
-    code = SDCARD_WriteSingleBlock(blockAddr, block);
+    code = SDCARD_WriteSingleBlock(blockAddr, &block[0]);
     if(code < 0) {
         UART_Printf("SDCARD_WriteSingleBlock() failed: code = %d\r\n", code);
         return;
@@ -140,60 +141,64 @@ void SDCard_init() {
 
     UART_Printf("SDCARD_ReadSingleBlock(0x%08X, ...) done! block = \"%c%c%c%c%c%c%c%c%c%c...\"\r\n",
         blockAddr, block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7], block[8], block[9]);
+    UART_Printf("SDCARD_ReadSingleBlock(0x%08X, ...) done! block = \"%x %x %x &x %x...\"\r\n",
+            blockAddr, block[0], block[1], block[2], block[3], block[10]);
 
-    blockAddr = startBlockAddr + 1;
-    code = SDCARD_WriteBegin(blockAddr);
-    if(code < 0) {
-        UART_Printf("SDCARD_WriteBegin() failed: code = %d\r\n", code);
-        return;
-    }
-    UART_Printf("SDCARD_WriteBegin(0x%08X, ...) done!\r\n", blockAddr);
+    ////-------------------------------------------------------------
 
-    for(int i = 0; i < 3; i++) {
-        snprintf((char*)block, sizeof(block), "0x%08X", (int)blockAddr);
-
-        code = SDCARD_WriteData(block);
-        if(code < 0) {
-            UART_Printf("SDCARD_WriteData() failed: code = %d\r\n", code);
-            return;
-        }
-
-        UART_Printf("SDCARD_WriteData() done! blockAddr = %08X\r\n", blockAddr);
-        blockAddr++;
-    }
-
-    code = SDCARD_WriteEnd();
-    if(code < 0) {
-        UART_Printf("SDCARD_WriteEnd() failed: code = %d\r\n", code);
-        return;
-    }
-    UART_Printf("SDCARD_WriteEnd() done!\r\n");
-
-    blockAddr = startBlockAddr + 1;
-    code = SDCARD_ReadBegin(blockAddr);
-    if(code < 0) {
-        UART_Printf("SDCARD_ReadBegin() failed: code = %d\r\n", code);
-        return;
-    }
-    UART_Printf("SDCARD_ReadBegin(0x%08X, ...) done!\r\n", blockAddr);
-
-    for(int i = 0; i < 3; i++) {
-        code = SDCARD_ReadData(block);
-        if(code < 0) {
-            UART_Printf("SDCARD_ReadData() failed: code = %d\r\n", code);
-            return;
-        }
-
-        UART_Printf("SDCARD_ReadData() done! block = \"%c%c%c%c%c%c%c%c%c%c...\"\r\n",
-            block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7], block[8], block[9]);
-    }
-
-    code = SDCARD_ReadEnd();
-    if(code < 0) {
-        UART_Printf("SDCARD_ReadEnd() failed: code = %d\r\n", code);
-        return;
-    }
-    UART_Printf("SDCARD_ReadEnd() done!\r\n");
+//    blockAddr = startBlockAddr + 1;
+//    code = SDCARD_WriteBegin(blockAddr);
+//    if(code < 0) {
+//        UART_Printf("SDCARD_WriteBegin() failed: code = %d\r\n", code);
+//        return;
+//    }
+//    UART_Printf("SDCARD_WriteBegin(0x%08X, ...) done!\r\n", blockAddr);
+//
+//    for(int i = 0; i < 3; i++) {
+//        snprintf((char*)block, sizeof(block), "0x%08X", (int)blockAddr);
+//
+//        code = SDCARD_WriteData(block);
+//        if(code < 0) {
+//            UART_Printf("SDCARD_WriteData() failed: code = %d\r\n", code);
+//            return;
+//        }
+//
+//        UART_Printf("SDCARD_WriteData() done! blockAddr = %08X\r\n", blockAddr);
+//        blockAddr++;
+//    }
+//
+//    code = SDCARD_WriteEnd();
+//    if(code < 0) {
+//        UART_Printf("SDCARD_WriteEnd() failed: code = %d\r\n", code);
+//        return;
+//    }
+//    UART_Printf("SDCARD_WriteEnd() done!\r\n");
+//
+//    blockAddr = startBlockAddr + 1;
+//    code = SDCARD_ReadBegin(blockAddr);
+//    if(code < 0) {
+//        UART_Printf("SDCARD_ReadBegin() failed: code = %d\r\n", code);
+//        return;
+//    }
+//    UART_Printf("SDCARD_ReadBegin(0x%08X, ...) done!\r\n", blockAddr);
+//
+//    for(int i = 0; i < 6; i++) {
+//        code = SDCARD_ReadData(block);
+//        if(code < 0) {
+//            UART_Printf("SDCARD_ReadData() failed: code = %d\r\n", code);
+//            return;
+//        }
+//
+//        UART_Printf("SDCARD_ReadData() done! block = \"%c%c%c%c%c%c%c%c%c%c...\"\r\n",
+//            block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7], block[8], block[9]);
+//    }
+//
+//    code = SDCARD_ReadEnd();
+//    if(code < 0) {
+//        UART_Printf("SDCARD_ReadEnd() failed: code = %d\r\n", code);
+//        return;
+//    }
+//    UART_Printf("SDCARD_ReadEnd() done!\r\n");
 }
 
 /* USER CODE END 0 */
@@ -234,8 +239,6 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_HS_USB_Init();
   MX_DMA_Init();
-  MX_SDMMC1_SD_Init();
-  MX_FATFS_Init();
   MX_SPI1_Init();
   MX_TIM3_Init();
   MX_WWDG1_Init();
@@ -246,13 +249,13 @@ int main(void)
   char temp[]="--------------------H7A3_SDCard----------------------"
 		  "\r\n Welcome to UART Port 115200 8 bit/stop1 none parity\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),30); // strlen = length of str -> config length of data
-  //SDCard_init();
+
 
   //// PWM Test
   HAL_TIM_Base_Start(&htim3);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
-
+  //SDCard_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -266,6 +269,7 @@ int main(void)
 		  sprintf(txtUARTBF,"timestamp =  %d\r\n", (int)timestamp_one);
 		  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 
+		  PWMOut1 = PWMOut1 + 10 % 10000;
 		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PWMOut1); // dutycycle
 	  }
 
@@ -287,6 +291,7 @@ int main(void)
 	  	   * Reload = 4095
 	  	   * (1/37KHz)* Prescalr * Reload = 7.08 sec
 	  	   * */
+#ifdef WWDG_EN
 	  if(HAL_GetTick() - timestamp_wwdg >= timerefresh_wwdg){ // flag_dis_wwdg for test only && SRAM4->flag_dis_wwdg != 12
 	  	  timestamp_wwdg = HAL_GetTick();
 		  HAL_WWDG_Refresh(&hwwdg1);
@@ -294,6 +299,7 @@ int main(void)
 		  //sprintf(txtUARTBF,"        wwdg tig\r\n");
 		  //HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 	  }
+#endif
 
     /* USER CODE END WHILE */
 
@@ -365,33 +371,6 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief SDMMC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SDMMC1_SD_Init(void)
-{
-
-  /* USER CODE BEGIN SDMMC1_Init 0 */
-
-  /* USER CODE END SDMMC1_Init 0 */
-
-  /* USER CODE BEGIN SDMMC1_Init 1 */
-
-  /* USER CODE END SDMMC1_Init 1 */
-  hsd1.Instance = SDMMC1;
-  hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
-  hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-  hsd1.Init.BusWide = SDMMC_BUS_WIDE_1B;
-  hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd1.Init.ClockDiv = 0;
-  /* USER CODE BEGIN SDMMC1_Init 2 */
-
-  /* USER CODE END SDMMC1_Init 2 */
-
-}
-
-/**
   * @brief SPI1 Initialization Function
   * @param None
   * @retval None
@@ -414,7 +393,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -701,6 +680,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_FS_OVCR_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PC8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : USB_FS_VBUS_Pin */
   GPIO_InitStruct.Pin = USB_FS_VBUS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -777,7 +764,8 @@ void SDMMC_Ex1(){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
-			timerefresh_wwdg = 1000;
+			//timerefresh_wwdg = 1000;
+			SDCard_init_scr();
 		}
 }
 /* USER CODE END 4 */
