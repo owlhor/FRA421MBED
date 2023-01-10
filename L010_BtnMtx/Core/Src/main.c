@@ -89,6 +89,9 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  //GPIOA->MODER = GPIOA->MODER & 0xffffff7f;
+  //GPIOA->OTYPER = GPIOA->OTYPER | GPIO_PIN_3;
+  //GPIOA->PUPDR = (GPIOA->PUPDR & 0xffffff3f) | 0x40;
   /* USER CODE END 2 */
 
   /* Infinite loop */

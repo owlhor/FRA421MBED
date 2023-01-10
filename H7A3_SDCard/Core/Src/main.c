@@ -18,12 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "string.h"
 #include "sdcard.h"
+#include "fatfs_sd.h"
 #include <stdarg.h>
 /* USER CODE END Includes */
 
@@ -35,7 +37,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 //#define SDMMC_EX1
-#define WWDG_EN
+//#define WWDG_EN
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,8 +54,6 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
-
-WWDG_HandleTypeDef hwwdg1;
 
 DMA_HandleTypeDef hdma_dma_generator0;
 /* USER CODE BEGIN PV */
@@ -74,7 +74,6 @@ static void MX_USB_OTG_HS_USB_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_WWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 void SDMMC_Ex1();
 void SDCard_init_scr();
@@ -241,7 +240,7 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_TIM3_Init();
-  MX_WWDG1_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -269,7 +268,7 @@ int main(void)
 		  sprintf(txtUARTBF,"timestamp =  %d\r\n", (int)timestamp_one);
 		  HAL_UART_Transmit(&huart3, (uint8_t*)txtUARTBF, strlen(txtUARTBF),10);
 
-		  PWMOut1 = PWMOut1 + 10 % 10000;
+		  PWMOut1 = PWMOut1 + 10 % 5000;
 		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PWMOut1); // dutycycle
 	  }
 
@@ -334,7 +333,7 @@ void SystemClock_Config(void)
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
@@ -393,7 +392,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -543,36 +542,6 @@ static void MX_USB_OTG_HS_USB_Init(void)
   /* USER CODE BEGIN USB_OTG_HS_Init 2 */
 
   /* USER CODE END USB_OTG_HS_Init 2 */
-
-}
-
-/**
-  * @brief WWDG1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_WWDG1_Init(void)
-{
-
-  /* USER CODE BEGIN WWDG1_Init 0 */
-
-  /* USER CODE END WWDG1_Init 0 */
-
-  /* USER CODE BEGIN WWDG1_Init 1 */
-
-  /* USER CODE END WWDG1_Init 1 */
-  hwwdg1.Instance = WWDG1;
-  hwwdg1.Init.Prescaler = WWDG_PRESCALER_128;
-  hwwdg1.Init.Window = 112;
-  hwwdg1.Init.Counter = 127;
-  hwwdg1.Init.EWIMode = WWDG_EWI_DISABLE;
-  if (HAL_WWDG_Init(&hwwdg1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN WWDG1_Init 2 */
-
-  /* USER CODE END WWDG1_Init 2 */
 
 }
 
