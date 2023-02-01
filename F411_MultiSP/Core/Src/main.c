@@ -18,11 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
-#include <string.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "strings.h"
+#include "string.h"
+#include "MCP320X.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,9 +36,11 @@
 /* USER CODE BEGIN PD */
 
 //#define dynamix_WRKS
-#define MCP3002_WRK
+
 //#define INA219_WRK
 #define EXT_WWDG_TGGR
+//#define MCP3002_WRK
+#define MCP3202_8_WRK
 
 #define INA219_ADDR 0b10000000
 #define INA219_CRNT 0x04
@@ -50,6 +54,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi3;
 
 TIM_HandleTypeDef htim11;
 
@@ -70,11 +75,11 @@ char UIBuffex[50] =
 uint8_t flag_spi2_read = 0;
 
 typedef union _MCP3002_SET{
-	struct MC
+	struct MCP
 	{
 		uint16_t bitread :12;
 		uint16_t reserv :2; // LSB
-		enum _REQFig{M_Diff_01,M_Diff_10,M_SE_CH0,M_SE_CH1} REQFig :2; // MSB
+		enum _REQFigu{Mm_Diff_01,Mm_Diff_10,Mm_SE_CH0,Mm_SE_CH1} REQFigu :2; // MSB
 	}MCP3002_8;
 	uint16_t U16;
 }MCP3002_SET;
@@ -84,10 +89,24 @@ MCP3002_SET MCrq2;
 MCP3002_SET MCread1;
 MCP3002_SET MCread2;
 
+MCP3202_SET mc2rq1;
+MCP3202_SET mc2read1;
+
+MCP3208_SET mc8rq1;
+MCP3208_SET mc8read1;
+
+
+union {
+	uint8_t U8[4];
+	uint16_t U16[2];
+	uint32_t U32;
+} MCPSHF = {0};
 
 uint16_t A_bitread= 0;
 float VADC_c = 0.0;
-////========Dynamix===========================================
+float VADC_cv = 0.0;
+
+////=======================================Dynamix======================================================
 //// 0xFF	0xFF Packet ID	Length	Instruction	Param 1	…	Param N	CHKSUM
 typedef union _dynamixel_buffer_1p0{
 	struct dx{
@@ -115,7 +134,7 @@ union {
 } goalpos = {0};
 
 
-//// INA219
+//// INA219 //////////////////////////////////////////////////////////////////////////////////////////
 union {
 	uint8_t U8[10];
 	uint16_t U16[5];
@@ -124,7 +143,7 @@ union {
 uint8_t flag_dyna = 0;
 uint16_t counter = 0;
 uint8_t wdg_tig = 0;
-uint32_t timestamp_one = 0;
+uint32_t timestamp_one[5] = {0};
 uint32_t timestamp_two = 0;
 uint32_t timestamp_wdg = 0;
 uint32_t timestamp_dmx = 0;
@@ -139,8 +158,10 @@ static void MX_USART2_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX);
+void MCP3208_RrEAD(uint8_t *pTrX, uint8_t *pRcX);
 uint64_t micros();
 int16_t UARTRecieveIT();
 void dynamix_enable_torque();
@@ -184,12 +205,16 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM11_Init();
   MX_USART6_UART_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   //HAL_TIM_Base_Start_IT(&htim11);
 
-  MCrq1.MCP3002_8.REQFig = M_Diff_01;
-  MCrq2.MCP3002_8.REQFig = M_SE_CH1;
-  HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
+  MCrq1.MCP3002_8.REQFigu = Mm_Diff_01;
+  MCrq2.MCP3002_8.REQFigu = Mm_SE_CH1;
+
+  mc2rq1.MCP3202_U.REQFig = M_SE_CH0;
+  mc8rq1.MCP3208_U.CHSlct = M8_CH0;
+  //HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
 
     char temp[]="----------------- F411_MultiSP --------------------\r\n";
     HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),10);
@@ -224,15 +249,46 @@ int main(void)
 	  	  }
 #endif
 
+#ifdef MCP3202_8_WRK
+	  if(HAL_GetTick() >= timestamp_one[1]){
+		  timestamp_one[1] += 500;
+		  flag_spi2_read = 1;
+	  }
+
+	  if (flag_spi2_read != 0 && hspi3.State == HAL_SPI_STATE_READY && HAL_GPIO_ReadPin(M8_CS_GPIO_Port, M8_CS_Pin) == GPIO_PIN_SET)
+		{
+		  //MCP3202_READ(&hspi2, mc2rq1.U16, mc2read1.U16);
+		  //VADC_cv = (mc2rq1.MCP3202_U.bitread << 1) * 0.00120;
+
+		  //// Shitty bitshift to the correct position Fig 6-1, MCP3208, MICROCHIP
+		  MCPSHF.U8[0] = (0x0000 | mc8rq1.MCP3208_U.CHSlct) >> 2;
+		  MCPSHF.U8[1] = (0x0000 | mc8rq1.MCP3208_U.CHSlct) << 6;
+		  MCP3208_RrEAD(&MCPSHF.U8[0], &mc8read1.U8[0]);
+		  //MCP3208_RrEAD(&mc8rq1.U8[0], &mc8read1.U8[0]);  // read work but bitshift uncorrect
+
+
+		  //VADC_cv = (mc8read1.MCP3208_U.bitread) * 0.00122; // 5 / 4096
+		  uint16_t bitredd = (((mc8read1.U8[1] << 8) + mc8read1.U8[2]) & 0xFFF);
+		  VADC_cv = bitredd * 0.00122; // 5 / 4096
+
+		  //// UART Send
+		  sprintf(TxDataBuffer, "VADC = %d %.3f \r\n ", bitredd, (float)VADC_cv); //mc8read1.MCP3208_U.bitread
+		  HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
+
+		  flag_spi2_read = 0;
+		}
+
+#endif
+
 #ifdef MCP3002_WRK
 	  ////========SPI MCP3002 ========================================
-	  if(HAL_GetTick()- timestamp_one >= 500){
-		  timestamp_one = HAL_GetTick();
+	  if(HAL_GetTick()- timestamp_one[0] >= 500){
+		  timestamp_one[0] = HAL_GetTick();
 		  flag_spi2_read = 1;
 	  }
 
 	  if (flag_spi2_read != 0 && hspi2.State == HAL_SPI_STATE_READY
-							&& HAL_GPIO_ReadPin(SPI2_CS_GPIO_Port, SPI2_CS_Pin)
+							&& HAL_GPIO_ReadPin(M2_CS_GPIO_Port, M2_CS_Pin)
 									== GPIO_PIN_SET)
 		{
 
@@ -377,10 +433,10 @@ static void MX_SPI2_Init(void)
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
   hspi2.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -392,6 +448,44 @@ static void MX_SPI2_Init(void)
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief SPI3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI3_Init(void)
+{
+
+  /* USER CODE BEGIN SPI3_Init 0 */
+
+  /* USER CODE END SPI3_Init 0 */
+
+  /* USER CODE BEGIN SPI3_Init 1 */
+
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_MASTER;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI3_Init 2 */
+
+  /* USER CODE END SPI3_Init 2 */
 
 }
 
@@ -527,10 +621,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin|SPI2_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(WDG_TG_GPIO_Port, WDG_TG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, M2_CS_Pin|M8_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -538,8 +635,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD2_Pin SPI2_CS_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin|SPI2_CS_Pin;
+  /*Configure GPIO pins : LD2_Pin M2_CS_Pin M8_CS_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|M2_CS_Pin|M8_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -621,11 +718,27 @@ int16_t UARTRecieveIT() // find last update position and return data in that pos
 void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX){
 
 	//uint16_t datain = pTrX; //0b1100000000000000
-	HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(M2_CS_GPIO_Port, M2_CS_Pin, GPIO_PIN_RESET);
 	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
 	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
 
 	HAL_SPI_TransmitReceive_IT(&hspi2, &pTrX, pRcX, 1);
+
+	//// Dout = ( 4096 x Vin )/ VCC
+	//// Dout x VCC / 4096 = Vin
+
+}
+
+void MCP3208_RrEAD(uint8_t *pTrX, uint8_t *pRcX){
+
+	//uint16_t datain = pTrX; //0b1100000000000000
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+
+	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
+	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
+
+	//HAL_SPI_TransmitReceive_IT(&hspi3, &pTrX, pRcX, 3);
+	HAL_SPI_TransmitReceive_IT(&hspi3, pTrX, pRcX, 3);
 
 	//// Dout = ( 4096 x Vin )/ VCC
 	//// Dout x VCC / 4096 = Vin
@@ -638,8 +751,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 	if (hspi == &hspi2)
 	{
 		// set cs back to 1, finished
-		HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(M2_CS_GPIO_Port, M2_CS_Pin, GPIO_PIN_SET);
 	}
+
+	if (hspi == &hspi3)
+		{
+		// set cs back to 1, finished
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){

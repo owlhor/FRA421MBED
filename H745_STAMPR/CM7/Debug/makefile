@@ -58,6 +58,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 H745_STAMPR_CM7.list \
 
+OBJCOPY_BIN += \
+H745_STAMPR_CM7.bin \
+
 
 # All Target
 all: main-build
@@ -81,12 +84,17 @@ H745_STAMPR_CM7.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+H745_STAMPR_CM7.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "H745_STAMPR_CM7.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) H745_STAMPR_CM7.elf H745_STAMPR_CM7.list H745_STAMPR_CM7.map default.size.stdout
+	-$(RM) H745_STAMPR_CM7.bin H745_STAMPR_CM7.elf H745_STAMPR_CM7.list H745_STAMPR_CM7.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

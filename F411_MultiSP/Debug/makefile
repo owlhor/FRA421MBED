@@ -52,6 +52,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 F411_MultiSP.list \
 
+OBJCOPY_BIN += \
+F411_MultiSP.bin \
+
 
 # All Target
 all: main-build
@@ -61,7 +64,7 @@ main-build: F411_MultiSP.elf secondary-outputs
 
 # Tool invocations
 F411_MultiSP.elf F411_MultiSP.map: $(OBJS) $(USER_OBJS) D:\github_desktop\FRA421MBED\F411_MultiSP\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "F411_MultiSP.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\github_desktop\FRA421MBED\F411_MultiSP\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F411_MultiSP.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "F411_MultiSP.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\github_desktop\FRA421MBED\F411_MultiSP\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F411_MultiSP.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,12 +78,17 @@ F411_MultiSP.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+F411_MultiSP.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "F411_MultiSP.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) F411_MultiSP.elf F411_MultiSP.list F411_MultiSP.map default.size.stdout
+	-$(RM) F411_MultiSP.bin F411_MultiSP.elf F411_MultiSP.list F411_MultiSP.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

@@ -227,7 +227,7 @@ int main(void)
   char temp[]="--------------------H745_ExamGame_CM4----------------------"
 		  "\r\n Welcome to UART Port 115200 8 bit/stop1 none parity\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)temp, strlen(temp),30); // strlen = length of str -> config length of data
-
+  //HAL_GetDEVID();
   /* USER CODE END 2 */
 
   /* Infinite loop */
