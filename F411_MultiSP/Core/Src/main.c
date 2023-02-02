@@ -102,7 +102,11 @@ union {
 	uint32_t U32;
 } MCPSHF = {0};
 
-uint16_t A_bitread= 0;
+uint8_t D8x_MOSI[3];
+uint8_t D8x_MISO[3];
+
+uint16_t A_bitread = 0;
+uint16_t AA_bitread = 0;
 float VADC_c = 0.0;
 float VADC_cv = 0.0;
 
@@ -162,6 +166,8 @@ static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX);
 void MCP3208_RrEAD(uint8_t *pTrX, uint8_t *pRcX);
+//void MCP3208_RwEAD(uint16_t *pTrX, uint16_t *pRcX);
+uint16_t MCP3208_READ_8_DataSPI_test(SPI_HandleTypeDef *hspi, MCP3208CHSelect M8_channel);
 uint64_t micros();
 int16_t UARTRecieveIT();
 void dynamix_enable_torque();
@@ -212,8 +218,10 @@ int main(void)
   MCrq1.MCP3002_8.REQFigu = Mm_Diff_01;
   MCrq2.MCP3002_8.REQFigu = Mm_SE_CH1;
 
-  mc2rq1.MCP3202_U.REQFig = M_SE_CH0;
-  mc8rq1.MCP3208_U.CHSlct = M8_CH0;
+
+
+  //mc8rq1.MCP3208_U.CHSlct = M8_CH0;
+  mc8rq1.MCP3208_DI_16.CHSlct = M8_CH0;
   //HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
 
     char temp[]="----------------- F411_MultiSP --------------------\r\n";
@@ -261,18 +269,25 @@ int main(void)
 		  //VADC_cv = (mc2rq1.MCP3202_U.bitread << 1) * 0.00120;
 
 		  //// Shitty bitshift to the correct position Fig 6-1, MCP3208, MICROCHIP
-		  MCPSHF.U8[0] = (0x0000 | mc8rq1.MCP3208_U.CHSlct) >> 2;
-		  MCPSHF.U8[1] = (0x0000 | mc8rq1.MCP3208_U.CHSlct) << 6;
-		  MCP3208_RrEAD(&MCPSHF.U8[0], &mc8read1.U8[0]);
+//		  MCPSHF.U8[0] = (0x0000 | mc8rq1.MCP3208_DI_16.CHSlct) >> 2;
+//		  MCPSHF.U8[1] = (0x0000 | mc8rq1.MCP3208_DI_16.CHSlct) << 6;
+		  //MCP3208_RrEAD(&MCPSHF.U8[0], &mc8read1.U8[0]);
+
 		  //MCP3208_RrEAD(&mc8rq1.U8[0], &mc8read1.U8[0]);  // read work but bitshift uncorrect
+		  //MCP3208_RwEAD(&mc8rq1.U16[0], &mc8read1.U16[0]);
 
+		  //uint16_t bitredd = (((mc8read1.U8[1] << 8) + mc8read1.U8[2]) & 0x0FFF); //// for 8 clk
+		  //A_bitread = (((mc8read1.U8[0] & 0x0F)<<8) + mc8read1.U8[3]); //// for 16 clk
 
-		  //VADC_cv = (mc8read1.MCP3208_U.bitread) * 0.00122; // 5 / 4096
-		  uint16_t bitredd = (((mc8read1.U8[1] << 8) + mc8read1.U8[2]) & 0xFFF);
-		  VADC_cv = bitredd * 0.00122; // 5 / 4096
+		  AA_bitread = MCP3208_READ_8_DataSPI(&hspi3, M8_CH0);
+		  VADC_cv =  MCP320x_ADCbit_to_Volt(AA_bitread); // 5 / 4096 * 0.00122
+
+		  A_bitread = MCP3202_READ_8_DataSPI(&hspi2, M2_SE_CH0);
+		  VADC_c = MCP320x_ADCbit_to_Volt(A_bitread);
+
 
 		  //// UART Send
-		  sprintf(TxDataBuffer, "VADC = %d %.3f \r\n ", bitredd, (float)VADC_cv); //mc8read1.MCP3208_U.bitread
+		  sprintf(TxDataBuffer, "VADC = %d %.3f _ %d %.3f \r\n ", AA_bitread, (float)VADC_cv, A_bitread, (float)VADC_c); //mc8read1.MCP3208_U.bitread
 		  HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
 
 		  flag_spi2_read = 0;
@@ -432,11 +447,11 @@ static void MX_SPI2_Init(void)
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -722,7 +737,7 @@ void MCP3002_READ(uint16_t pTrX, uint16_t *pRcX){
 	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
 	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
 
-	HAL_SPI_TransmitReceive_IT(&hspi2, &pTrX, pRcX, 1);
+	//HAL_SPI_TransmitReceive_IT(&hspi2, &pTrX, pRcX, 1);
 
 	//// Dout = ( 4096 x Vin )/ VCC
 	//// Dout x VCC / 4096 = Vin
@@ -745,6 +760,33 @@ void MCP3208_RrEAD(uint8_t *pTrX, uint8_t *pRcX){
 
 }
 
+//void MCP3208_RwEAD(uint16_t *pTrX, uint16_t *pRcX){
+//
+//	//uint16_t datain = pTrX; //0b1100000000000000
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+//
+//	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
+//	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
+//
+//	HAL_SPI_TransmitReceive_IT(&hspi3, pTrX, pRcX, 2);
+//
+//
+//}
+
+uint16_t MCP3208_READ_8_DataSPI_test(SPI_HandleTypeDef *hspi, MCP3208CHSelect M8_channel){
+
+	//// Shitty bitshift to the correct position Fig 6-1, MCP3208, MICROCHIP
+
+	D8x_MOSI[0] = M8_channel >> 2;
+	D8x_MOSI[1] = M8_channel << 6;
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+
+	HAL_SPI_TransmitReceive_IT(hspi, &D8x_MOSI[0], &D8x_MISO[0], 3);
+
+	return ((D8x_MISO[1] << 8) + D8x_MISO[2]) & 0x0FFF;
+
+}
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
@@ -754,11 +796,11 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 		HAL_GPIO_WritePin(M2_CS_GPIO_Port, M2_CS_Pin, GPIO_PIN_SET);
 	}
 
-	if (hspi == &hspi3)
-		{
-		// set cs back to 1, finished
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-		}
+//	if (hspi == &hspi3)
+//		{
+//		// set cs back to 1, finished
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+//		}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){

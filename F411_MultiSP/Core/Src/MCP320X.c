@@ -13,39 +13,70 @@
 #define MCP3208_SPI_CS_Port  GPIOA
 #define MCP3208_SPI_CS_Pin   GPIO_PIN_9
 
-/* Motorola 16 bit MSB
- * */
 
-void MCP3202_READ(SPI_HandleTypeDef *hspi, uint16_t pTrX, uint16_t pRcX){
 
-	//uint16_t datain = pTrX; //0b1100000000000000
+uint16_t MCP3202_READ_8_DataSPI(SPI_HandleTypeDef *hspi, MCP3202CHSelec M2_channel){
+
+	//// Shitty bitshift to the correct position Fig 6-1, MCP3208, MICROCHIP
+	uint8_t D8_MOSI[3];
+	uint8_t D8_MISO[3];
+	D8_MOSI[0] = M2_channel >> 2;
+	D8_MOSI[1] = (M2_channel << 6) | 0x20;
+
+
 	HAL_GPIO_WritePin(MCP3202_SPI_CS_Port,MCP3202_SPI_CS_Pin , GPIO_PIN_RESET);
-	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
-	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
 
-	//HAL_SPI_TransmitReceive_IT(hspi, pTrX, pRcX, 1);
-	//HAL_SPI_TransmitReceive(hspi, pTrX, pRcX, 1, 100);
+	HAL_SPI_TransmitReceive(hspi, &D8_MOSI[0], &D8_MISO[0], 3, 100);
 
-	//// Dout = ( 4096 x Vin )/ VCC
-	//// Dout x VCC / 4096 = Vin
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(MCP3202_SPI_CS_Port, MCP3202_SPI_CS_Pin, GPIO_PIN_SET);
+	//HAL_SPI_Abort(hspi);
+	HAL_GPIO_WritePin(MCP3202_SPI_CS_Port,MCP3202_SPI_CS_Pin , GPIO_PIN_SET);
 
+	return ((D8_MISO[1] << 8) + D8_MISO[2]) & 0x0FFF;
 }
 
-//void MCP3208_READ(SPI_HandleTypeDef *hspi, uint16_t pTrX, uint16_t pRcX){
+/* Read using SPI 16 Bit Data size MSB first
+ * Set CS back with CpltCallback
+ * */
+
+//uint16_t MCP3208_READ_16_DataSPI(SPI_HandleTypeDef *hspi, MCP3208ChannelSelect M8_channel){
 //
-//	//uint16_t datain = pTrX; //0b1100000000000000
+//	uint16_t D_MOSI[2] = {M8_channel << 5, 0x0000};
+//	uint16_t D_MISO[2] = {0};
+//
 //	HAL_GPIO_WritePin(MCP3208_SPI_CS_Port,MCP3208_SPI_CS_Pin , GPIO_PIN_RESET);
-//	//HAL_SPI_Transmit_IT(&hspi2, &datain, 1);
-//	//HAL_SPI_TransmitReceive(&hspi2, pTrX, &pRcX, 1, 100);
 //
-//	HAL_SPI_TransmitReceive_IT(hspi, pTrX, pRcX, 1);
-//	//HAL_SPI_TransmitReceive(hspi, pTrX, pRcX, 1, 100);
+//	HAL_SPI_TransmitReceive_IT(hspi, D_MOSI[0], D_MISO[0], 2);
 //
-//	//// Dout = ( 4096 x Vin )/ VCC
-//	//// Dout x VCC / 4096 = Vin
+//	return (D_MISO[0] + (D_MISO[1] >> 8) )& 0x0FFF;
 //
 //}
 
+/* Read using SPI 8 Bit Data size MSB first
+ * Ex.
+ * AA_bitread = MCP3208_READ_8_DataSPI(&hspi3, M8_CH0);
+	VADC_cv =  MCP3208_ADCbit_to_Volt(AA_bitread); // 5 / 4096 * 0.00122
+ * */
+uint16_t MCP3208_READ_8_DataSPI(SPI_HandleTypeDef *hspi, MCP3208CHSelect M8_channel){
+
+	//// Shitty bitshift to the correct position Fig 6-1, MCP3208, MICROCHIP
+	uint8_t D8_MOSI[3];
+	uint8_t D8_MISO[3];
+	D8_MOSI[0] = M8_channel >> 2;
+	D8_MOSI[1] = M8_channel << 6;
+
+
+	HAL_GPIO_WritePin(MCP3208_SPI_CS_Port,MCP3208_SPI_CS_Pin , GPIO_PIN_RESET);
+
+	HAL_SPI_TransmitReceive(hspi, &D8_MOSI[0], &D8_MISO[0], 3, 100);
+
+	//HAL_SPI_Abort(hspi);
+	HAL_GPIO_WritePin(MCP3208_SPI_CS_Port,MCP3208_SPI_CS_Pin , GPIO_PIN_SET);
+
+	return ((D8_MISO[1] << 8) + D8_MISO[2]) & 0x0FFF;
+}
+
+
+float MCP320x_ADCbit_to_Volt(uint16_t adcbit){
+	return adcbit * 0.00122;
+}
 
