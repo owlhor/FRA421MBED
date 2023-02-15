@@ -135,12 +135,15 @@ int main(void)
 	  if(HAL_GetTick()-timeStampPAC >= 500){
 		  timeStampPAC = HAL_GetTick();
 		  //PACread_8(0x01, &testp.tst8[0], 4);
+
 		  PACread_8(0x01, &CTRL_read.D8[0], 2);
 
 		  PACread_8(hexis, &testp_2.tst8[0], 4);
 		  Busvv = 0.000488281 * testp_2.tst16[1];
 		  Busv = PAC_Cal_BusVolt(testp_2.tst16[1]);
 		  PAC_Read_CTRL(&hi2c1, ADDR_PAC, 0);
+
+
 //		  int aaa = PAC_CTRL_ACT_read.PACCTRL.SAMPLE_MODE;
 //		  PAC_CTRL_read.PACCTRL.GPIO_ALERT2 = S_256AA;
 	  }

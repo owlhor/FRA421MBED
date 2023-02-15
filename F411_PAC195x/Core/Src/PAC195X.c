@@ -61,7 +61,7 @@ void PAC_Read_ID(I2C_HandleTypeDef *hi2c, uint8_t DevADDR){ //
 	 * ex. PAC_Read_ID(&hi2c1, ADDR_PAC);
 	 * */
 	if(hi2c->State == HAL_I2C_STATE_READY){
-		HAL_I2C_Mem_Read(hi2c, DevADDR, 0xFD, I2C_MEMADD_SIZE_8BIT,
+		HAL_I2C_Mem_Read(hi2c, DevADDR, PAC_Regis_PDID, I2C_MEMADD_SIZE_8BIT,
 				&PAC_ID_Chk.D8[0], 3, 100);
 	}
 }

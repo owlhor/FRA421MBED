@@ -13,6 +13,8 @@
 
 #include "stm32f4xx_hal.h"
 
+#define PAC_Regis_PDID 0xFD
+
 //enum _NrmAcLat{NRM, ACT, LAT}NrmAcLat;
 //typedef union __PAC_NrmACTLAT{
 //	enum _NrmAcLat{NRM, ACT, LAT}NrmAcLat;

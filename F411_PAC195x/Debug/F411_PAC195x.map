@@ -133,6 +133,7 @@ Discarded input sections
  .group         0x0000000000000000        0xc ./Core/Src/main.o
  .group         0x0000000000000000        0xc ./Core/Src/main.o
  .group         0x0000000000000000        0xc ./Core/Src/main.o
+ .group         0x0000000000000000        0xc ./Core/Src/main.o
  .text          0x0000000000000000        0x0 ./Core/Src/main.o
  .data          0x0000000000000000        0x0 ./Core/Src/main.o
  .bss           0x0000000000000000        0x0 ./Core/Src/main.o
@@ -3970,63 +3971,64 @@ LOAD c:/st/stm32cubeide_1.8.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.exte
  .debug_ranges  0x0000000000000a68      0x158 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
  .debug_ranges  0x0000000000000bc0      0x220 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_macro    0x0000000000000000    0x15d86
- .debug_macro   0x0000000000000000      0x1f7 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000001f7      0xa78 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000000c6f      0x2a1 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000000f10       0x2e ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000000f3e       0x28 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000000f66       0x22 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000000f88       0x8e ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000001016       0x51 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000001067      0x103 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000000116a       0x6a ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000011d4      0x1df ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000013b3       0x1c ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000013cf       0x22 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000013f1       0xd9 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000014ca     0x102d ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000024f7      0x11f ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000002616     0xb953 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000000df69       0x6d ./Core/Src/PAC195X.o
- .debug_macro   0x000000000000dfd6     0x367e ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000011654      0x174 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000117c8       0x5c ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000011824      0x447 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000011c6b      0x9fe ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012669      0x115 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001277e      0x11b ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012899       0xa5 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001293e      0x15f ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012a9d      0x287 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012d24       0x5f ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012d83      0x236 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000012fb9      0x132 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000130eb      0x264 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001334f       0x2e ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001337d      0x1b5 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000013532       0x22 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000013554       0xd6 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001362a      0x11a ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000013744       0x85 ./Core/Src/PAC195X.o
- .debug_macro   0x00000000000137c9       0x89 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000013852      0x8e6 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000014138       0x47 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001417f      0x295 ./Core/Src/PAC195X.o
- .debug_macro   0x0000000000014414      0x126 ./Core/Src/PAC195X.o
- .debug_macro   0x000000000001453a      0x206 ./Core/Src/main.o
- .debug_macro   0x0000000000014740       0x5e ./Core/Src/main.o
- .debug_macro   0x000000000001479e      0x1f6 ./Core/Src/stm32f4xx_hal_msp.o
- .debug_macro   0x0000000000014994      0x200 ./Core/Src/stm32f4xx_it.o
- .debug_macro   0x0000000000014b94      0x1e7 ./Core/Src/system_stm32f4xx.o
- .debug_macro   0x0000000000014d7b      0x247 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
- .debug_macro   0x0000000000014fc2      0x1e7 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
- .debug_macro   0x00000000000151a9      0x1ed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
- .debug_macro   0x0000000000015396      0x22e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
- .debug_macro   0x00000000000155c4      0x20b ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
- .debug_macro   0x00000000000157cf      0x1e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
- .debug_macro   0x00000000000159b7      0x1e7 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
- .debug_macro   0x0000000000015b9e      0x1e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+.debug_macro    0x0000000000000000    0x15d9b
+ .debug_macro   0x0000000000000000      0x1fd ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000001fd      0xa78 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000000c75      0x2a1 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000000f16       0x2e ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000000f44       0x28 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000000f6c       0x22 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000000f8e       0x8e ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000000101c       0x51 ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000000106d      0x103 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000001170       0x6a ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000011da      0x1df ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000013b9       0x1c ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000013d5       0x22 ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000013f7       0xd9 ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000014d0     0x102d ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000024fd      0x11f ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000000261c     0xb953 ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000000df6f       0x6d ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000000dfdc     0x367e ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001165a      0x174 ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000117ce       0x5c ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001182a      0x447 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000011c71      0x9fe ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001266f      0x115 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012784      0x11b ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001289f       0xa5 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012944      0x15f ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012aa3      0x287 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012d2a       0x5f ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012d89      0x236 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000012fbf      0x132 ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000130f1      0x264 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000013355       0x2e ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000013383      0x1b5 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000013538       0x22 ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001355a       0xd6 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000013630      0x11a ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001374a       0x85 ./Core/Src/PAC195X.o
+ .debug_macro   0x00000000000137cf       0x89 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000013858      0x8e6 ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001413e       0x47 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000014185      0x295 ./Core/Src/PAC195X.o
+ .debug_macro   0x000000000001441a      0x126 ./Core/Src/PAC195X.o
+ .debug_macro   0x0000000000014540      0x205 ./Core/Src/main.o
+ .debug_macro   0x0000000000014745       0x5e ./Core/Src/main.o
+ .debug_macro   0x00000000000147a3       0x10 ./Core/Src/main.o
+ .debug_macro   0x00000000000147b3      0x1f6 ./Core/Src/stm32f4xx_hal_msp.o
+ .debug_macro   0x00000000000149a9      0x200 ./Core/Src/stm32f4xx_it.o
+ .debug_macro   0x0000000000014ba9      0x1e7 ./Core/Src/system_stm32f4xx.o
+ .debug_macro   0x0000000000014d90      0x247 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_macro   0x0000000000014fd7      0x1e7 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_macro   0x00000000000151be      0x1ed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_macro   0x00000000000153ab      0x22e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
+ .debug_macro   0x00000000000155d9      0x20b ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_macro   0x00000000000157e4      0x1e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+ .debug_macro   0x00000000000159cc      0x1e7 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+ .debug_macro   0x0000000000015bb3      0x1e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
 .debug_line     0x0000000000000000    0x10850
  .debug_line    0x0000000000000000      0x74a ./Core/Src/PAC195X.o
@@ -4044,34 +4046,34 @@ LOAD c:/st/stm32cubeide_1.8.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.exte
  .debug_line    0x000000000000c473     0x1968 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
  .debug_line    0x000000000000dddb     0x2a75 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_str      0x0000000000000000    0x8c7f6
- .debug_str     0x0000000000000000    0x886ce ./Core/Src/PAC195X.o
-                                      0x889ef (size before relaxing)
- .debug_str     0x00000000000886ce      0xdbf ./Core/Src/main.o
-                                      0x8979a (size before relaxing)
- .debug_str     0x000000000008948d       0xef ./Core/Src/stm32f4xx_hal_msp.o
+.debug_str      0x0000000000000000    0x8c80a
+ .debug_str     0x0000000000000000    0x886e2 ./Core/Src/PAC195X.o
+                                      0x88a03 (size before relaxing)
+ .debug_str     0x00000000000886e2      0xdbf ./Core/Src/main.o
+                                      0x897ae (size before relaxing)
+ .debug_str     0x00000000000894a1       0xef ./Core/Src/stm32f4xx_hal_msp.o
                                       0x8937d (size before relaxing)
- .debug_str     0x000000000008957c      0x128 ./Core/Src/stm32f4xx_it.o
+ .debug_str     0x0000000000089590      0x128 ./Core/Src/stm32f4xx_it.o
                                       0x88a08 (size before relaxing)
- .debug_str     0x00000000000896a4       0xdb ./Core/Src/system_stm32f4xx.o
+ .debug_str     0x00000000000896b8       0xdb ./Core/Src/system_stm32f4xx.o
                                       0x88453 (size before relaxing)
- .debug_str     0x000000000008977f       0x36 ./Core/Startup/startup_stm32f411retx.o
+ .debug_str     0x0000000000089793       0x36 ./Core/Startup/startup_stm32f411retx.o
                                          0x66 (size before relaxing)
- .debug_str     0x00000000000897b5      0x5df ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_str     0x00000000000897c9      0x5df ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
                                       0x88e7f (size before relaxing)
- .debug_str     0x0000000000089d94      0x32d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_str     0x0000000000089da8      0x32d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
                                       0x88ba0 (size before relaxing)
- .debug_str     0x000000000008a0c1       0xe8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_str     0x000000000008a0d5       0xe8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
                                       0x885ce (size before relaxing)
- .debug_str     0x000000000008a1a9      0xaed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
+ .debug_str     0x000000000008a1bd      0xaed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
                                       0x89411 (size before relaxing)
- .debug_str     0x000000000008ac96      0x213 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_str     0x000000000008acaa      0x213 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
                                       0x88887 (size before relaxing)
- .debug_str     0x000000000008aea9      0xe4e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+ .debug_str     0x000000000008aebd      0xe4e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
                                       0x897bb (size before relaxing)
- .debug_str     0x000000000008bcf7      0x503 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+ .debug_str     0x000000000008bd0b      0x503 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
                                       0x88fd7 (size before relaxing)
- .debug_str     0x000000000008c1fa      0x5fc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .debug_str     0x000000000008c20e      0x5fc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
                                       0x88e14 (size before relaxing)
 
 .comment        0x0000000000000000       0x50
