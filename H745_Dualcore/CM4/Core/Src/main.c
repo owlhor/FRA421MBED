@@ -174,10 +174,10 @@ int main(void)
     	        for(j=0;j<5000;j++)
     	        {
     	      	  //// random something into DATA[] (unequal)
-    	            Random = rand();
+    	            //Random = rand();
     	            for(i=0;i<500;i++)
     	            {
-    	                SRAM4->DATA[i] =Random;
+    	                SRAM4->DATA[i] = i; // Random
     	            }
     	        }
 

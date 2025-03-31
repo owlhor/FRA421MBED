@@ -1,0 +1,9 @@
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:157:1:alloc_funny_pointers	2
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:195:1:make_funny_pointers	5
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:238:1:set_wraparound_pointers	3
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:266:1:set_bottom_pointers	5
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:307:1:start_pass_main	4
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:345:1:process_data_simple_main	4
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:385:1:process_data_context_main	12
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:459:1:process_data_crank_post	1
+D:/github_desktop/FRA421MBED/H745_STAMPR/Middlewares/Third_Party/LibJPEG/source/jdmainct.c:476:1:jinit_d_main_controller	5

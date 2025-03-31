@@ -1,8 +1,9 @@
 /*
  * MCP320X.h
  *
- *  Created on: 31 Jan 2566
+ *  Created on: 31 Jan 2023
  *      Author: owl_hor
+ * Last update: 28 Feb 2023
  */
 
 #ifndef INC_MCP320X_H_

@@ -1,0 +1,3 @@
+../Core/Src/DS_RTC.c:18:6:DS3231_Read	32	static
+../Core/Src/DS_RTC.c:29:6:DS3231_Read_v	32	static
+../Core/Src/DS_RTC.c:42:6:EXIN_RTC_SYNC	40	static

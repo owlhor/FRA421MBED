@@ -1,0 +1,4 @@
+PAC195X.c:21:7:PAC_Cal_BusVolt	1
+PAC195X.c:26:7:PAC_Cal_SnsCurrent	1
+PAC195X.c:34:6:PAC_Read_CTRL	6
+PAC195X.c:58:6:PAC_Read_ID	2

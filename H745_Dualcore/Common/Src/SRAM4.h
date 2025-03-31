@@ -8,7 +8,7 @@
 #ifndef SRC_SRAM4_H_
 #define SRC_SRAM4_H_
 //#define TASK2_NO_HSEM //// HSEM => Semaphore
-#define TASK2_WITH_HSEM
+//#define TASK2_WITH_HSEM
 
 #define SHARED_MEMORY_ADDR 0x38000000 // SRAM4 start addr(in datasheet)
 
